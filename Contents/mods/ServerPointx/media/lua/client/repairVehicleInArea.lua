@@ -3,6 +3,11 @@ require "TimedActions/ISTimedActionQueue"
 
 RepairVehicleAction = ISBaseTimedAction:derive("RepairVehicleAction")
 
+-- Table to store the last repair time for each player
+local lastRepairTime = {}
+-- Table to store the last message time for each player
+local lastMessageTime = {}
+
 function RepairVehicleAction:isValid()
     return true
 end
@@ -34,10 +39,6 @@ function RepairVehicleAction:perform()
             end
         end
         print("Vehicle repaired at ID: " .. vehicle:getId())
-        local player = getPlayer()
-        if player then
-            player:Say("My vehicle has been repaired! Free Charge")
-        end
         -- Play success sound
         self:playSuccessSound()
     end
@@ -57,50 +58,63 @@ function RepairVehicleAction:new(player, vehicle, time)
     return o
 end
 
+-- Table to store the last repair time for each player
+local lastRepairTime = {}
+
 local function repairVehiclesInZones()
-    local cell = getCell()
-    if not cell then return end -- Ensure cell is available
+  local cell = getCell()
+  if not cell then return end -- Ensure cell is available
 
-    local vehicles = cell:getVehicles() -- Get all vehicles
-    local player = getPlayer()
-    if not player then return end -- Ensure player is available
+  local player = getPlayer()
+  if not player then return end -- Ensure player is available
 
-    local px, py = player:getX(), player:getY() -- Player coordinates
+  local vehicle = player:getVehicle()
+  if not vehicle then return end -- Ensure player is in a vehicle
 
-    -- Hardcoded repair zones with the new zone added
-    local repairAreas = {
-        {enabled = true, minX = 9384, maxX = 9388, minY = 11180, maxY = 11185}, -- New zone added
-        {enabled = true, minX = 7242, maxX = 7251, minY = 5503, maxY = 5509},
-        {enabled = true, minX = 12715, maxX = 12724, minY = 5074, maxY = 5086}
-    }
+  local px, py = player:getX(), player:getY() -- Player coordinates
 
-    -- Check if the player is inside a repair zone
-    local playerInRepairZone = false
-    for _, area in ipairs(repairAreas) do
-        if area.enabled and px >= area.minX and px <= area.maxX and py >= area.minY and py <= area.maxY then
-            playerInRepairZone = true
-            break
-        end
-    end
+  -- Hardcoded repair zones with the new zone added
+  local repairAreas = {
+      {enabled = true, minX = 9384, maxX = 9388, minY = 11180, maxY = 11185}, -- New zone added
+      {enabled = true, minX = 7242, maxX = 7251, minY = 5503, maxY = 5509},
+      {enabled = true, minX = 12715, maxX = 12724, minY = 5074, maxY = 5086}
+  }
 
-    if not playerInRepairZone then return end -- Exit if player is not in a repair zone
+  local playerInRepairZone = false
+  for _, area in ipairs(repairAreas) do
+      if area.enabled and px >= area.minX and px <= area.maxX and py >= area.minY and py <= area.maxY then
+          playerInRepairZone = true
+          break
+      end
+  end
 
-    -- Repair vehicles in zones
-    if not vehicles or vehicles:isEmpty() then return end -- Ensure vehicles exist
-    for i = 0, vehicles:size() - 1 do
-        local vehicle = vehicles:get(i)
-        if vehicle then
-            local vx, vy = vehicle:getX(), vehicle:getY()
-            -- Check if the vehicle is inside the same repair zone as the player
-            for _, area in ipairs(repairAreas) do
-                if area.enabled and vx >= area.minX and vx <= area.maxX and vy >= area.minY and vy <= area.maxY then
-                    -- Send server command to repair the vehicle
-                    sendClientCommand("ServerPoints", "repairVehicle", { vehicle:getId() })
-                    break -- Stop checking other areas once we find one
-                end
-            end
-        end
-    end
+  if not playerInRepairZone then return end
+
+  local playerTierValue = tonumber(PlayerTierHandler.getPlayerTierValue(player)) or 1
+  if playerTierValue < 3 then
+      player:Say("I need to upgrade my tier to repair vehicles.")
+      return
+  end
+
+  local playerId = player:getOnlineID()
+  local currentTime = getGameTime():getWorldAgeHours()
+  local lastRepair = lastRepairTime[playerId] or 0
+  local cooldown = 24 -- 24 hours cooldown
+
+  if currentTime - lastRepair < cooldown then
+      local lastMessage = lastMessageTime[playerId] or 0
+      local messageCooldown = 10 / 60 -- 1 minute cooldown for messages (1/60 of an hour)
+
+      if currentTime - lastMessage >= messageCooldown then
+          player:Say("!" .. math.floor(cooldown - (currentTime - lastRepair)) .. " hours remaining, until i can repair again." )
+          lastMessageTime[playerId] = currentTime
+      end
+      return
+  end
+
+  -- Update the last repair time
+  lastRepairTime[playerId] = currentTime
+  sendClientCommand("ServerPoints", "repairVehicle", { vehicle:getId() })
 end
 
 local function imInRepairZone()
@@ -199,3 +213,5 @@ end)
 Events.OnEquipSecondary.Add(function(player, item)
     restrictLegendWeaponOnEquip(player, item)
 end)
+
+Events.OnPlayerUpdate.Add(repairVehiclesInZones)
