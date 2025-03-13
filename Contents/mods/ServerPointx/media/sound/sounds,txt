@@ -1,0 +1,10 @@
+{
+    name = "repairing"
+    category = "UserInterface"
+    file = "repairing.ogg"
+},
+{
+    name = "success"
+    category = "UserInterface"
+    file = "success.ogg"
+}

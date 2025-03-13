@@ -1,0 +1,5 @@
+ServerPointsShared = {
+  QueueTrait = {}
+}
+
+return ServerPointsShared

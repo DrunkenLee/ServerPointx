@@ -1,0 +1,7 @@
+version=1
+id=3430755855
+title=ServerPointx
+description=Required mod = SpeedFramework, Another Vehicle claim system, ZonaMerahCore
+description=Server point extentions for Zona Merah.
+tags=Build 41
+visibility=public
