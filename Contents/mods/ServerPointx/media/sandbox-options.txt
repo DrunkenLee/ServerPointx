@@ -38,3 +38,21 @@ option ServerPoints.ServerMessage
     page = ServerPoints,
     translation = ServerPoints_ServerMessage,
 }
+
+option ServerPoints.RepairArea1
+{
+    type = string,
+    default = "8000,8010,6000,6010",  // Default coordinates for new zone 1
+
+    page = ServerPoints,
+    translation = ServerPoints_RepairArea1,
+}
+
+option ServerPoints.RepairArea2
+{
+    type = string,
+    default = "9000,9010,7000,7010",  // Default coordinates for new zone 2
+
+    page = ServerPoints,
+    translation = ServerPoints_RepairArea2,
+}

@@ -12,5 +12,8 @@ Sandbox_EN = {
 
     Sandbox_ServerPoints_PointsPerTick = "Points Per Tick",
 
-    Sandbox_ServerPoints_ServerMessage = "Server Message"
+    Sandbox_ServerPoints_ServerMessage = "Server Message",
+
+    Sandbox_ServerPoints_RepairArea1 = "Repair Area 1 Coordinates",
+    Sandbox_ServerPoints_RepairArea2 = "Repair Area 2 Coordinates"
 }
