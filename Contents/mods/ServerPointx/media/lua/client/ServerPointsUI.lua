@@ -240,10 +240,13 @@ function ServerPointsUI.BuyType.UTIL(row)
   local player = getPlayer()
   if row.target == "HEALTH" then
       local bodyDamage = player:getBodyDamage()
+      local stats = player:getStats()
+
       bodyDamage:setFoodSicknessLevel(0)
       bodyDamage:setInfected(false)
       bodyDamage:setPoisonLevel(0)
       bodyDamage:setSneezeCoughActive(0)
+      stats:setSickness(0) -- Set the player's sickness to 0
 
       for i = 0, bodyDamage:getBodyParts():size() - 1 do
           local bodyPart = bodyDamage:getBodyParts():get(i)
@@ -265,8 +268,8 @@ function ServerPointsUI.BuyType.UTIL(row)
           -- Ensure the queue is initialized
           ServerPointsShared.QueueTrait = ServerPointsShared.QueueTrait or {}
           local queueObj = {
-            username = player:getUsername(),
-            trait = trait
+              username = player:getUsername(),
+              trait = trait
           }
           table.insert(ServerPointsShared.QueueTrait, queueObj)
           player:Say("Added trait to queue: " .. trait)
@@ -283,9 +286,9 @@ function ServerPointsUI.BuyType.UTIL(row)
           ServerPointsShared.QueueTrait = ServerPointsShared.QueueTrait or {}
 
           local queueObj = {
-            username = player:getUsername(),
-            trait = trait,
-            remove = true
+              username = player:getUsername(),
+              trait = trait,
+              remove = true
           }
           table.insert(ServerPointsShared.QueueTrait, queueObj)
           player:Say("Removed trait from queue: " .. trait)
