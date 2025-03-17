@@ -21,7 +21,7 @@ function ServerPointsAdminPanel:createChildren()
     local x = padBottom + getTextManager():MeasureStringX(UIFont.Medium, "Player:") + padBottom
     self.playerSelect = ISComboBox:new(x, padBottom * 2 + FONT_HGT_MEDIUM, self.width - x - padBottom, btnHgt, nil, function(_, combo)
         Events.OnServerCommand.Add(OnServerCommand)
-        print(combo.options[combo.selected] .. "[ASDASDASDASD]")
+        -- print(combo.options[combo.selected] .. "[ASDASDASDASD]")
         sendClientCommand("ServerPoints", "get", { combo.options[combo.selected] })
     end)
     self.playerSelect:initialise()
