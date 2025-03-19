@@ -190,8 +190,18 @@ function ServerPointsUI.BuyType.ITEM(row)
   local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
 
   local price = row.price
-  if isVIP > 0 then
+
+  if isVIP == 1 then
       price = price * 0.9 -- Apply 10% discount
+  end
+
+  if isVIP == 2 then
+    price = price * 0.8 -- Apply 20% discount
+  end
+
+
+  if isVIP == 3 then
+    price = price * 0.7 -- Apply 30% discount
   end
 
   sendClientCommand("ServerPoints", "buy", { price, row.target })
@@ -203,8 +213,16 @@ function ServerPointsUI.BuyType.VEHICLE(row)
   local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
 
   local price = row.price
-  if isVIP > 0 then
-      price = price * 0.9 -- Apply 10% discount
+  if isVIP == 1 then
+    price = price * 0.9 -- Apply 10% discount
+  end
+
+  if isVIP == 2 then
+  price = price * 0.8 -- Apply 20% discount
+  end
+
+  if isVIP == 3 then
+    price = price * 0.7 -- Apply 30% discount
   end
 
   sendClientCommand("ServerPoints", "buy", { price, row.target })
@@ -216,8 +234,16 @@ function ServerPointsUI.BuyType.XP(row)
   local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
 
   local price = row.price
-  if isVIP > 0 then
-      price = price * 0.9 -- Apply 10% discount
+  if isVIP == 1 then
+    price = price * 0.9 -- Apply 10% discount
+  end
+
+  if isVIP == 2 then
+  price = price * 0.8 -- Apply 20% discount
+  end
+
+  if isVIP == 3 then
+    price = price * 0.7 -- Apply 30% discount
   end
 
   sendClientCommand("ServerPoints", "buy", { price, row.target })
@@ -415,8 +441,16 @@ function ServerPointsUI:onBuy()
   local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
 
   local price = row.price
-  if isVIP > 0 then
-      price = price * 0.9 -- Apply 10% discount
+  if isVIP == 1 then
+    price = price * 0.9 -- Apply 10% discount
+  end
+
+  if isVIP == 2 then
+  price = price * 0.8 -- Apply 20% discount
+  end
+
+  if isVIP == 3 then
+    price = price * 0.7 -- Apply 30% discount
   end
 
   self.points = self.points - price
