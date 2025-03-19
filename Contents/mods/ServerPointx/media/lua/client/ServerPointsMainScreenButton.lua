@@ -47,6 +47,7 @@ function MainScreen:instantiate()
         self.pointsOption.fade = UITransition.new()
         self.pointsOption.fade:setFadeIn(false)
         self.pointsOption.prerender = self.prerenderBottomPanelLabel
+        self.pointsOption:setVisible(false)
 
         -- Add your Simple UI component reverved for transfer ui------------------------
         local simpleUIWidth = 400
