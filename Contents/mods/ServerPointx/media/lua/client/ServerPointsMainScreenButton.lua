@@ -58,3 +58,38 @@ function MainScreen:instantiate()
         self:addChild(self.simpleUI)
     end
 end
+
+local timerEndTime = nil
+
+function ShowServerPointsUI(duration)
+    if MainScreen and MainScreen.instance and MainScreen.instance.serverPoints then
+        MainScreen.instance.serverPoints:setVisible(true)
+        print("ServerPoints UI is now visible.")
+
+        duration = duration or (60 * 5)
+
+        timerEndTime = os.time() + duration
+
+        Events.OnTick.Add(CheckServerPointsUITimer)
+    else
+        print("Error: MainScreen or serverPoints UI is not initialized.")
+    end
+end
+
+function HideServerPointsUI()
+    if MainScreen and MainScreen.instance and MainScreen.instance.serverPoints then
+        MainScreen.instance.serverPoints:setVisible(false)
+        print("ServerPoints UI is now hidden.")
+    else
+        print("Error: MainScreen or serverPoints UI is not initialized.")
+    end
+end
+
+function CheckServerPointsUITimer()
+    -- Compare the current real-world time with the timer end time
+    if timerEndTime and os.time() >= timerEndTime then
+        HideServerPointsUI()
+        timerEndTime = nil
+        Events.OnTick.Remove(CheckServerPointsUITimer)
+    end
+end
