@@ -1,6 +1,6 @@
-name=Server Pointx
+name=Server Pointx_dev
 poster=poster.png
-id=ServerPointx
+id=ServerPointx_dev
 versionMin=41.78
 description=Reward players based on play time extra. with revamped functionality
 url=
