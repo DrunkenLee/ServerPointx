@@ -186,46 +186,102 @@ function ServerPointsUI:onReload()
 end
 
 function ServerPointsUI.BuyType.ITEM(row)
-    sendClientCommand("ServerPoints", "buy", { row.price, row.target })
-    getPlayer():getInventory():AddItems(row.target, row.quantity)
+  local player = getPlayer()
+  local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
+
+  local price = row.price
+  if isVIP > 0 then
+      price = price * 0.9 -- Apply 10% discount
+  end
+
+  sendClientCommand("ServerPoints", "buy", { price, row.target })
+  player:getInventory():AddItems(row.target, row.quantity)
 end
 
 function ServerPointsUI.BuyType.VEHICLE(row)
-    sendClientCommand("ServerPoints", "buy", { row.price, row.target })
-    sendClientCommand("ServerPoints", "vehicle", { row.target })
+  local player = getPlayer()
+  local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
+
+  local price = row.price
+  if isVIP > 0 then
+      price = price * 0.9 -- Apply 10% discount
+  end
+
+  sendClientCommand("ServerPoints", "buy", { price, row.target })
+  sendClientCommand("ServerPoints", "vehicle", { row.target })
 end
 
 function ServerPointsUI.BuyType.XP(row)
-    sendClientCommand("ServerPoints", "buy", { row.price, row.target })
-    getPlayer():getXp():AddXP(Perks[row.target], row.quantity, true, false, false)
+  local player = getPlayer()
+  local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
+
+  local price = row.price
+  if isVIP > 0 then
+      price = price * 0.9 -- Apply 10% discount
+  end
+
+  sendClientCommand("ServerPoints", "buy", { price, row.target })
+  player:getXp():AddXP(Perks[row.target], row.quantity, true, false, false)
 end
 
 function validateTrait(player, trait)
   local conflictingTraits = {
-    -- Fear-Related Conflicts
-    Brave = "Cowardly",
-    Cowardly = "Brave",
+      -- Fear-Related Conflicts
+      Brave = "Cowardly",
+      Cowardly = "Brave",
 
-    -- Fitness & Strength-Related Conflicts
-    Underweight = "Fit",
-    VeryUnderweight = "Fit",
-    Obese = "Fit",
-    Fit = "Underweight",
-    Athletic = "VeryUnderweight",
-    Weak = "Strong",
-    Feeble = "Stout",
-    Stout = "Feeble",
-    Strong = "Weak",
+      -- Fitness & Strength-Related Conflicts
+      Underweight = "Fit",
+      VeryUnderweight = "Fit",
+      Obese = "Fit",
+      Fit = "Underweight",
+      Athletic = "VeryUnderweight",
+      Weak = "Strong",
+      Feeble = "Stout",
+      Stout = "Feeble",
+      Strong = "Weak",
 
-    -- Vision & Hearing Conflicts
-    EagleEyed = "ShortSighted",
-    ShortSighted = "EagleEyed",
-    KeenHearing = "HardOfHearing",
-    HardOfHearing = "KeenHearing",
-    Deaf = "KeenHearing",
+      -- Vision & Hearing Conflicts
+      EagleEyed = "ShortSighted",
+      ShortSighted = "EagleEyed",
+      KeenHearing = "HardOfHearing",
+      HardOfHearing = "KeenHearing",
+      Deaf = "KeenHearing",
 
-    -- Other Conflicts
-    NightVision = "ShortSighted"
+      -- Other Conflicts
+      NightVision = "ShortSighted",
+      FastLearner = "SlowLearner",
+      SlowLearner = "FastLearner",
+      FastReader = "SlowReader",
+      SlowReader = "FastReader",
+      FastHealer = "SlowHealer",
+      SlowHealer = "FastHealer",
+      Organized = "Disorganized",
+      Disorganized = "Organized",
+      Graceful = "Clumsy",
+      Clumsy = "Graceful",
+      Inconspicuous = "Conspicuous",
+      Conspicuous = "Inconspicuous",
+      LightEater = "HeartyAppetite",
+      HeartyAppetite = "LightEater",
+      LowThirst = "HighThirst",
+      HighThirst = "LowThirst",
+      Outdoorsman = "ProneToIllness",
+      ProneToIllness = "Outdoorsman",
+      IronGut = "WeakStomach",
+      WeakStomach = "IronGut",
+      ThickSkinned = "ThinSkinned",
+      ThinSkinned = "ThickSkinned",
+      Dextrous = "AllThumbs",
+      AllThumbs = "Dextrous",
+      Lucky = "Unlucky",
+      Unlucky = "Lucky",
+      CatEyes = "NightVision",
+      NightVision = "CatEyes",
+      Wakeful = "Sleepyhead",
+      Sleepyhead = "Wakeful",
+      RestfulSleeper = "Insomniac",
+      Insomniac = "RestfulSleeper"
   }
 
   local conflict = conflictingTraits[trait]
@@ -354,13 +410,21 @@ function ServerPointsUI.BuyType.BUFF(row)
 end
 
 function ServerPointsUI:onBuy()
-    local row = self.tabPanel.activeView.view.items[self.tabPanel.activeView.view.mouseoverselected]
-    self.points = self.points - row.price
-    if ServerPointsUI.BuyType[row.type] then
-        ServerPointsUI.BuyType[row.type](row)
-    end
-    Events.OnServerCommand.Add(OnServerCommand)
-    sendClientCommand("ServerPoints", "get", nil)
+  local row = self.tabPanel.activeView.view.items[self.tabPanel.activeView.view.mouseoverselected]
+  local player = getPlayer()
+  local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
+
+  local price = row.price
+  if isVIP > 0 then
+      price = price * 0.9 -- Apply 10% discount
+  end
+
+  self.points = self.points - price
+  if ServerPointsUI.BuyType[row.type] then
+      ServerPointsUI.BuyType[row.type](row)
+  end
+  Events.OnServerCommand.Add(OnServerCommand)
+  sendClientCommand("ServerPoints", "get", nil)
 end
 
 function ServerPointsUI.PreviewType.VEHICLE(self)
