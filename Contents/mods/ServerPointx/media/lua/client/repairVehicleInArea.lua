@@ -106,9 +106,11 @@ local function repairVehiclesInZones()
     local playerId = player:getOnlineID()
     local currentTime = getGameTime():getWorldAgeHours()
     local lastRepair = lastRepairTime[playerId] or 0
-    local cooldown = 24 * 12 -- 12 hours cooldown in real
+    local cooldown = 24 * 24
     local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
-    if isVIP > 0 then cooldown = 0 end
+    if isVIP == 1 then cooldown = cooldown / 2 end
+    if isVIP == 2 then cooldown = cooldown / 4 end
+    if isVIP == 3 then cooldown = cooldown / 6 end
 
     if currentTime - lastRepair < cooldown then
         local lastMessage = lastMessageTime[playerId] or 0
