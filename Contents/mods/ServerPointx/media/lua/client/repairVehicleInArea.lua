@@ -80,12 +80,12 @@ local function repairVehiclesInZones()
         {enabled = true, minX = 12715, maxX = 12724, minY = 5074, maxY = 5086}, -- Existing zone
     }
 
-    -- Add new zones from sandbox options
-    local repairArea1Coords = parseCoordinates(SandboxVars.ServerPoints.RepairArea1)
-    table.insert(repairAreas, {enabled = true, minX = repairArea1Coords[1], maxX = repairArea1Coords[2], minY = repairArea1Coords[3], maxY = repairArea1Coords[4]})
+    -- -- Add new zones from sandbox options
+    -- local repairArea1Coords = parseCoordinates(SandboxVars.ServerPoints.RepairArea1)
+    -- table.insert(repairAreas, {enabled = true, minX = repairArea1Coords[1], maxX = repairArea1Coords[2], minY = repairArea1Coords[3], maxY = repairArea1Coords[4]})
 
-    local repairArea2Coords = parseCoordinates(SandboxVars.ServerPoints.RepairArea2)
-    table.insert(repairAreas, {enabled = true, minX = repairArea2Coords[1], maxX = repairArea2Coords[2], minY = repairArea2Coords[3], maxY = repairArea2Coords[4]})
+    -- local repairArea2Coords = parseCoordinates(SandboxVars.ServerPoints.RepairArea2)
+    -- table.insert(repairAreas, {enabled = true, minX = repairArea2Coords[1], maxX = repairArea2Coords[2], minY = repairArea2Coords[3], maxY = repairArea2Coords[4]})
 
     local playerInRepairZone = false
     for _, area in ipairs(repairAreas) do
