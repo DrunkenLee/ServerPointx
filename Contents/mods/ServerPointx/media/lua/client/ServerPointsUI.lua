@@ -130,47 +130,56 @@ local function OnTick()
 end
 
 function ServerPointsUI:createChildren()
-    local z = 15 * FONT_SCALE * 2 + FONT_HGT_LARGE + 1
-    local btnWid = 125 * FONT_SCALE
-    local btnHgt = FONT_HGT_SMALL + 5 * 2 * FONT_SCALE
-    local padBottom = 10 * FONT_SCALE
+  local z = 15 * FONT_SCALE * 2 + FONT_HGT_LARGE + 1
+  local btnWid = 125 * FONT_SCALE
+  local btnHgt = FONT_HGT_SMALL + 5 * 2 * FONT_SCALE
+  local padBottom = 10 * FONT_SCALE
 
-    self.tabPanel = ISTabPanel:new(0, z, self.width, self.height - z - padBottom - btnHgt - padBottom)
-    self.tabPanel:initialise()
-    self.tabPanel.tabFont = UIFont.Medium
-    self.tabPanel.tabHeight = FONT_HGT_MEDIUM + 6
-    self.tabPanel.render = self.tabPanelRender
-    self.tabPanel.addView = self.addView
-    self:addChild(self.tabPanel)
-    Events.OnTick.Add(OnTick)
+  self.tabPanel = ISTabPanel:new(0, z, self.width, self.height - z - padBottom - btnHgt - padBottom)
+  self.tabPanel:initialise()
+  self.tabPanel.tabFont = UIFont.Medium
+  self.tabPanel.tabHeight = FONT_HGT_MEDIUM + 6
+  self.tabPanel.render = self.tabPanelRender
+  self.tabPanel.addView = self.addView
+  self:addChild(self.tabPanel)
+  Events.OnTick.Add(OnTick)
 
-    self.previewButton = ISButton:new(self.width - 200 * FONT_SCALE - padBottom * 2, 0, 100 * FONT_SCALE, FONT_HGT_LARGE + 1 * FONT_SCALE + FONT_HGT_SMALL, "PREVIEW", self, ServerPointsUI.onPreview)
-    self.previewButton:initialise()
-    self.previewButton:instantiate()
-    self.previewButton.borderColor = self.buttonBorderColor
-    self.previewButton:setVisible(false)
-    self.previewButton.font = UIFont.Medium
-    self:addChild(self.previewButton)
+  -- Add the "PREVIEW" button
+  self.previewButton = ISButton:new(self.width - 200 * FONT_SCALE - padBottom * 2, 0, 100 * FONT_SCALE, FONT_HGT_LARGE + 1 * FONT_SCALE + FONT_HGT_SMALL, "PREVIEW", self, ServerPointsUI.onPreview)
+  self.previewButton:initialise()
+  self.previewButton:instantiate()
+  self.previewButton.borderColor = self.buttonBorderColor
+  self.previewButton:setVisible(false)
+  self.previewButton.font = UIFont.Medium
+  self:addChild(self.previewButton)
 
-    self.buyButton = ISButton:new(self.width - 100 * FONT_SCALE - padBottom, 0, 100 * FONT_SCALE, FONT_HGT_LARGE + 1 * FONT_SCALE + FONT_HGT_SMALL, "BUY", self, ServerPointsUI.onBuy)
-    self.buyButton:initialise()
-    self.buyButton:instantiate()
-    self.buyButton.borderColor = self.buttonBorderColor
-    self.buyButton:setVisible(false)
-    self.buyButton.font = UIFont.Medium
-    self:addChild(self.buyButton)
+  -- Add the "Discounted price applied for VIP" label
+  self.discountLabel = ISLabel:new(self.previewButton.x - 200 * FONT_SCALE, self.previewButton.y + (self.previewButton.height / 2) - (FONT_HGT_SMALL / 2), FONT_HGT_SMALL, "ZonaMerah development env.", 1, 1, 1, 1, UIFont.Small, true)
+  self.discountLabel:initialise()
+  self.discountLabel:setVisible(true)
+  self:addChild(self.discountLabel)
 
-    self.cancelButton = ISButton:new(self.width - padBottom - btnWid, self.height - padBottom - btnHgt, btnWid, btnHgt, getText("UI_btn_close"), self, ServerPointsUI.close)
-    self.cancelButton:initialise()
-    self.cancelButton:instantiate()
-    self:addChild(self.cancelButton)
+  -- Add the "BUY" button
+  self.buyButton = ISButton:new(self.width - 100 * FONT_SCALE - padBottom, 0, 100 * FONT_SCALE, FONT_HGT_LARGE + 1 * FONT_SCALE + FONT_HGT_SMALL, "BUY", self, ServerPointsUI.onBuy)
+  self.buyButton:initialise()
+  self.buyButton:instantiate()
+  self.buyButton.borderColor = self.buttonBorderColor
+  self.buyButton:setVisible(false)
+  self.buyButton.font = UIFont.Medium
+  self:addChild(self.buyButton)
 
-    if getDebug() then
-        self.reloadButton = ISButton:new(self.cancelButton.x - padBottom - btnWid, self.cancelButton.y, btnWid, btnHgt, "RELOAD", self, ServerPointsUI.onReload)
-        self.reloadButton:initialise()
-        self.reloadButton:instantiate()
-        self:addChild(self.reloadButton)
-    end
+  -- Add the "CLOSE" button
+  self.cancelButton = ISButton:new(self.width - padBottom - btnWid, self.height - padBottom - btnHgt, btnWid, btnHgt, getText("UI_btn_close"), self, ServerPointsUI.close)
+  self.cancelButton:initialise()
+  self.cancelButton:instantiate()
+  self:addChild(self.cancelButton)
+
+  if getDebug() then
+      self.reloadButton = ISButton:new(self.cancelButton.x - padBottom - btnWid, self.cancelButton.y, btnWid, btnHgt, "RELOAD", self, ServerPointsUI.onReload)
+      self.reloadButton:initialise()
+      self.reloadButton:instantiate()
+      self:addChild(self.reloadButton)
+  end
 end
 
 function ServerPointsUI:close()

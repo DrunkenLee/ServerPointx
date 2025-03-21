@@ -80,12 +80,12 @@ local function repairVehiclesInZones()
         {enabled = true, minX = 12715, maxX = 12724, minY = 5074, maxY = 5086}, -- Existing zone
     }
 
-    -- Add new zones from sandbox options
-    local repairArea1Coords = parseCoordinates(SandboxVars.ServerPoints.RepairArea1)
-    table.insert(repairAreas, {enabled = true, minX = repairArea1Coords[1], maxX = repairArea1Coords[2], minY = repairArea1Coords[3], maxY = repairArea1Coords[4]})
+    -- -- Add new zones from sandbox options
+    -- local repairArea1Coords = parseCoordinates(SandboxVars.ServerPoints.RepairArea1)
+    -- table.insert(repairAreas, {enabled = true, minX = repairArea1Coords[1], maxX = repairArea1Coords[2], minY = repairArea1Coords[3], maxY = repairArea1Coords[4]})
 
-    local repairArea2Coords = parseCoordinates(SandboxVars.ServerPoints.RepairArea2)
-    table.insert(repairAreas, {enabled = true, minX = repairArea2Coords[1], maxX = repairArea2Coords[2], minY = repairArea2Coords[3], maxY = repairArea2Coords[4]})
+    -- local repairArea2Coords = parseCoordinates(SandboxVars.ServerPoints.RepairArea2)
+    -- table.insert(repairAreas, {enabled = true, minX = repairArea2Coords[1], maxX = repairArea2Coords[2], minY = repairArea2Coords[3], maxY = repairArea2Coords[4]})
 
     local playerInRepairZone = false
     for _, area in ipairs(repairAreas) do
@@ -113,14 +113,20 @@ local function repairVehiclesInZones()
     if isVIP == 3 then cooldown = cooldown / 6 end
 
     if currentTime - lastRepair < cooldown then
-        local lastMessage = lastMessageTime[playerId] or 0
-        local messageCooldown = 10 / 60 -- 1 minute cooldown for messages (1/60 of an hour)
+      local lastMessage = lastMessageTime[playerId] or 0
+      local messageCooldown = 10 / 60 -- 1 minute cooldown for messages (1/60 of an hour)
 
-        if currentTime - lastMessage >= messageCooldown then
-            player:Say("!" .. math.floor(cooldown - (currentTime - lastRepair)) .. " hours remaining, until I can repair again.")
-            lastMessageTime[playerId] = currentTime
-        end
-        return
+      if currentTime - lastMessage >= messageCooldown then
+          local remainingTime = cooldown - (currentTime - lastRepair)
+
+          -- Convert in-game hours to real-time hours and minutes
+          local realTimeHours = math.floor(remainingTime / 24) -- 24 in-game hours = 1 real-time hour
+          local realTimeMinutes = math.floor((remainingTime % 24) * (60 / 24)) -- Convert remaining in-game hours to real-time minutes
+
+          player:Say("!" .. realTimeHours .. " hours and " .. realTimeMinutes .. " minutes remaining until I can repair again.")
+          lastMessageTime[playerId] = currentTime
+      end
+      return
     end
 
     -- Update the last repair time

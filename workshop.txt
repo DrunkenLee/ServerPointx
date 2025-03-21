@@ -1,5 +1,5 @@
 version=1
-id=
+id=3447786621
 title=ServerPointx_dev
 description=Required mod = SpeedFramework, Another Vehicle claim system, ZonaMerahCore
 description=Server point extentions for Zona Merah.
