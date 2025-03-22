@@ -156,11 +156,11 @@ local function imInRepairZone()
   }
 
   -- Add new zones from sandbox options
-  local repairArea1Coords = parseCoordinates(SandboxVars.ServerPoints.RepairArea1)
-  table.insert(repairAreas, {enabled = true, minX = repairArea1Coords[1], maxX = repairArea1Coords[2], minY = repairArea1Coords[3], maxY = repairArea1Coords[4]})
+  -- local repairArea1Coords = parseCoordinates(SandboxVars.ServerPoints.RepairArea1)
+  -- table.insert(repairAreas, {enabled = true, minX = repairArea1Coords[1], maxX = repairArea1Coords[2], minY = repairArea1Coords[3], maxY = repairArea1Coords[4]})
 
-  local repairArea2Coords = parseCoordinates(SandboxVars.ServerPoints.RepairArea2)
-  table.insert(repairAreas, {enabled = true, minX = repairArea2Coords[1], maxX = repairArea2Coords[2], minY = repairArea2Coords[3], maxY = repairArea2Coords[4]})
+  -- local repairArea2Coords = parseCoordinates(SandboxVars.ServerPoints.RepairArea2)
+  -- table.insert(repairAreas, {enabled = true, minX = repairArea2Coords[1], maxX = repairArea2Coords[2], minY = repairArea2Coords[3], maxY = repairArea2Coords[4]})
 
   -- Check if the player is inside a repair zone
   for _, area in ipairs(repairAreas) do
