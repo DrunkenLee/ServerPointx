@@ -1,8 +1,14 @@
 local SimpleUI = ISPanel:derive("SimpleUI")
 
 function SimpleUI:initialise()
-    ISPanel.initialise(self)
-    self:addChild(ISLabel:new(10, 10, 20, "SERVER POINTS TRANSFER", 1, 1, 1, 1, UIFont.Small, true))
+  ISPanel.initialise(self)
+    -- Create a dedicated field for balance that can be updated
+    self.balanceLabel = ISLabel:new(10, 10, 20, "SERVER POINTS TRANSFER", 1, 1, 1, 1, UIFont.Small, true)
+    self.balanceLabel:initialise()
+    self:addChild(self.balanceLabel)
+
+    -- Update the balance display
+    self:updateBalanceDisplay()
 
     -- Add close button to hide the UI
     local closeButton = ISButton:new(self:getWidth() - 30, 10, 20, 20, "X", self, SimpleUI.onClose)
@@ -51,10 +57,25 @@ function SimpleUI:initialise()
     transferButton:initialise()
     self:addChild(transferButton)
 
-    -- Add a refresh button to repopulate the dropdown
+    -- Add a refresh button to repopulate the dropdown AND update balance
     local refreshButton = ISButton:new(210, 130, 80, 25, "Refresh", self, SimpleUI.onRefreshPlayers)
     refreshButton:initialise()
     self:addChild(refreshButton)
+end
+
+-- Function to update the balance display
+function SimpleUI:updateBalanceDisplay()
+    local username = getPlayer():getUsername()
+    local clientBalance = GlobalMethods.getPlayerPoints(username)
+
+    -- Format the balance with commas for thousands
+    local formattedBalance = tostring(clientBalance)
+    if tonumber(clientBalance) >= 1000 then
+        formattedBalance = string.format("%d,%03d", math.floor(clientBalance/1000), clientBalance%1000)
+    end
+
+    self.balanceLabel:setName("SERVER POINTS:  " .. formattedBalance)
+    return clientBalance
 end
 
 -- Function to handle closing the UI
@@ -105,6 +126,7 @@ function SimpleUI:getSelectedRecipient()
     end
 end
 
+-- Update the onTransferPoints function to refresh the balance after transfer
 function SimpleUI:onTransferPoints()
   local points = tonumber(self.transferInput:getText())
   local recipient = self:getSelectedRecipient()
@@ -117,7 +139,6 @@ function SimpleUI:onTransferPoints()
       else
           -- Debug balance checking
           local senderBalance = GlobalMethods.getPlayerPoints(sender)
-          senderBalance = GlobalMethods.getPlayerPoints(sender)
           print("DEBUG: Raw balance value: " .. tostring(senderBalance))
 
           -- Convert to number explicitly
@@ -144,6 +165,7 @@ function SimpleUI:onTransferPoints()
               points = points
           })
 
+          self:updateBalanceDisplay()
           self:playSuccessSound()
       end
   else
@@ -152,8 +174,10 @@ function SimpleUI:onTransferPoints()
   end
 end
 
+-- Ensure refresh function updates both player list and balance
 function SimpleUI:onRefreshPlayers()
     self:populateRecipientDropdown()
+    self:updateBalanceDisplay()
 end
 
 function SimpleUI:new(x, y, width, height)
