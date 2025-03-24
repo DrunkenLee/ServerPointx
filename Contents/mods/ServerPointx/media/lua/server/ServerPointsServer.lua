@@ -109,15 +109,56 @@ function ServerPointsCommands.buy(module, command, player, args)
 end
 
 function ServerPointsCommands.vehicle(module, command, player, args)
-  local vehicle = addVehicleDebug(args[1], IsoDirections.S, nil, player:getSquare())
-  for i = 0, vehicle:getPartCount() - 1 do
-      local container = vehicle:getPartByIndex(i):getItemContainer()
-      if container then
-          container:removeAllItems()
+  local playerSquare = player:getSquare()
+  local vehicle = addVehicleDebug(args[1], IsoDirections.S, nil, playerSquare)
+
+  local spawnSuccess = false
+  if vehicle then
+      local vehicleID = vehicle:getId()
+      local retrievedVehicle = getVehicleById(vehicleID)
+      local vehicleSquare = vehicle:getCurrentSquare()
+
+      print(vehicleID, retrievedVehicle, vehicleSquare)
+
+      if retrievedVehicle then
+          -- Vehicle truly spawned successfully
+          spawnSuccess = true
+          for i = 0, vehicle:getPartCount() - 1 do
+              local container = vehicle:getPartByIndex(i):getItemContainer()
+              if container then
+                  container:removeAllItems()
+              end
+          end
+          vehicle:repair()
+          player:sendObjectChange("addItem", { item = vehicle:createVehicleKey() })
+
+          -- Send success message back to client
+          sendServerCommand(player, "ServerPoints", "vehicleSpawnResult", {
+              success = true,
+              message = "Vehicle spawned successfully!"
+          })
+          print(string.format("[SERVER POINTS] %s successfully spawned vehicle %s", player:getUsername(), args[1]))
+      else
+          if vehicle then
+              vehicle:permanentlyRemove()
+          end
+          spawnSuccess = false
       end
   end
-  vehicle:repair()
-  player:sendObjectChange("addItem", { item = vehicle:createVehicleKey() })
+
+  -- If spawn failed for any reason
+  if not spawnSuccess then
+      -- Vehicle spawn failed - send failure message back to client
+      sendServerCommand(player, "ServerPoints", "vehicleSpawnResult", {
+          success = false,
+          message = "Failed to spawn vehicle. You need to be in an open area with enough space.",
+          vehicleType = args[1]
+      })
+      print(string.format("[SERVER POINTS] Failed to spawn vehicle %s for %s - location may be obstructed",
+          args[1], player:getUsername()))
+  end
+
+  return spawnSuccess
 end
 
 function ServerPointsCommands.add(module, command, player, args)
@@ -136,6 +177,28 @@ end
 
 function ServerPointsCommands.reload(module, command, player, args)
   LoadListings()
+end
+
+function ServerPointsCommands.notifyTransfer(module, command, player, args)
+  local recipient = args.recipient
+  local sender = args.sender
+  local points = args.points
+
+  -- Find the recipient player instance
+  local players = getOnlinePlayers()
+  for i = 0, players:size() - 1 do
+      local onlinePlayer = players:get(i)
+      if onlinePlayer:getUsername() == recipient then
+          -- Send notification to recipient
+          sendServerCommand(onlinePlayer, "ServerPoints", "showTransferNotification", {
+              sender = sender,
+              points = points
+          })
+          print(string.format("[SERVER POINTS] Notification sent to %s about transfer of %d points from %s",
+              recipient, points, sender))
+          break
+      end
+  end
 end
 
 function OnServerCommand(module, command, arguments)

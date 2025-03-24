@@ -51,11 +51,11 @@ function MainScreen:instantiate()
 
         -- Add your Simple UI component reverved for transfer ui------------------------
         local simpleUIWidth = 400
-        local simpleUIHeight = 100
+        local simpleUIHeight = 170
         local marginBottom = 100
         self.simpleUI = SimpleUI:new((core:getScreenWidth() - simpleUIWidth) / 2, core:getScreenHeight() - simpleUIHeight - marginBottom, simpleUIWidth, simpleUIHeight)
         self.simpleUI:initialise()
-        self.simpleUI:setVisible(false)
+        self.simpleUI:setVisible(true)
         self:addChild(self.simpleUI)
     end
 end

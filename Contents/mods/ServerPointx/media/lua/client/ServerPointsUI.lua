@@ -227,15 +227,60 @@ function ServerPointsUI.BuyType.VEHICLE(row)
   end
 
   if isVIP == 2 then
-  price = price * 0.8 -- Apply 20% discount
+    price = price * 0.8 -- Apply 20% discount
   end
 
   if isVIP == 3 then
     price = price * 0.7 -- Apply 30% discount
   end
 
+  -- Store the purchase info for possible refund
+  ServerPointsUI.lastVehiclePurchase = {
+    price = price,
+    vehicleType = row.target
+  }
+
+  -- Register listener for the response (only once)
+  if not ServerPointsUI.vehicleSpawnListener then
+    Events.OnServerCommand.Add(ServerPointsUI.onVehicleSpawnResult)
+    ServerPointsUI.vehicleSpawnListener = true
+  end
+
+  -- Process the purchase
   sendClientCommand("ServerPoints", "buy", { price, row.target })
   sendClientCommand("ServerPoints", "vehicle", { row.target })
+end
+
+function ServerPointsUI.onVehicleSpawnResult(module, command, args)
+  if module == "ServerPoints" and command == "vehicleSpawnResult" then
+    local player = getPlayer()
+
+    if args.success then
+      -- Vehicle spawned successfully
+      player:Say(args.message)
+      print("[ServerPoints] Vehicle spawned successfully: " .. ServerPointsUI.lastVehiclePurchase.vehicleType)
+    else
+      -- Vehicle spawn failed - refund points
+      player:Say(args.message)
+      print("[ServerPoints] Vehicle spawn failed: " .. args.vehicleType)
+
+      if ServerPointsUI.lastVehiclePurchase then
+        -- Refund the points
+        sendClientCommand("ServerPoints", "add", {
+          player:getUsername(),
+          ServerPointsUI.lastVehiclePurchase.price
+        })
+        print("[ServerPoints] Refunded " .. ServerPointsUI.lastVehiclePurchase.price .. " points")
+
+        -- Update UI
+        Events.OnServerCommand.Add(OnServerCommand)
+        sendClientCommand("ServerPoints", "get", nil)
+      end
+    end
+
+    -- Clear the purchase info
+    ServerPointsUI.lastVehiclePurchase = nil
+  end
 end
 
 function ServerPointsUI.BuyType.XP(row)
