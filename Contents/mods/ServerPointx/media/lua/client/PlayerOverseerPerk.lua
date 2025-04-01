@@ -13,7 +13,8 @@ local isOverseerAuthorized = false
 -- Overseer features toggle states
 local overseerFeatures = {
   infiniteAmmo = false,
-  seeEveryone = false
+  seeEveryone = false,
+  mapTracking = false  -- New feature to see players on map
 }
 
 -- Improved debug function
@@ -25,6 +26,7 @@ ServerPointx.Overseer.debug = function()
   print("Feature status:")
   print("- Infinite Ammo: " .. tostring(overseerFeatures.infiniteAmmo))
   print("- See Everyone: " .. tostring(overseerFeatures.seeEveryone))
+  print("- Map Tracking: " .. tostring(overseerFeatures.mapTracking))
 
   return "Authorization status: " .. tostring(isOverseerAuthorized)
 end
@@ -139,6 +141,36 @@ local function highlightAllPlayers()
   end
 end
 
+-- Function to show all players on the map
+local function showPlayersOnMap()
+    -- Skip if feature is disabled
+    if not overseerFeatures.mapTracking then return end
+
+    -- Get the world map UI
+    local mapUI = getWorldMapInstance()
+    if not mapUI then return end
+
+    -- Get all online players
+    local players = getOnlinePlayers()
+    if not players then return end
+
+    local localPlayer = getSpecificPlayer(0)
+
+    -- Add all players to the map
+    for i = 0, players:size() - 1 do
+        local player = players:get(i)
+        if player ~= localPlayer then
+            -- Add player marker on map
+            local x = player:getX()
+            local y = player:getY()
+            local username = player:getUsername()
+
+            -- Use the map API to add a marker (color: red)
+            mapUI:addPlayerPosition(player, username, 0.9, 0.1, 0.1)
+        end
+    end
+end
+
 -- Create a simple UI to toggle features
 local function createOverseerMenu()
   if not isOverseerAuthorized then
@@ -146,7 +178,7 @@ local function createOverseerMenu()
       return
   end
 
-  local modal = ISModalDialog:new(0, 0, 280, 180, "Overseer Menu", true, nil, function() end)
+  local modal = ISModalDialog:new(0, 0, 280, 220, "Overseer Menu", true, nil, function() end)
   modal:initialise()
   modal:addToUIManager()
   modal:setAlwaysOnTop(true)
@@ -167,7 +199,7 @@ local function createOverseerMenu()
   modal:addChild(infiniteAmmoBtn)
 
   y = y + 35
-  -- Create seeEveryoneBtn first
+  -- Create seeEveryoneBtn
   local seeEveryoneBtn = ISButton:new(40, y, 200, 25, "See Everyone: " .. (overseerFeatures.seeEveryone and "ON" or "OFF"), nil, function()
       overseerFeatures.seeEveryone = not overseerFeatures.seeEveryone
       local success, error = pcall(function()
@@ -180,6 +212,21 @@ local function createOverseerMenu()
   end)
   seeEveryoneBtn:initialise()
   modal:addChild(seeEveryoneBtn)
+
+  y = y + 35
+  -- Create mapTrackingBtn
+  local mapTrackingBtn = ISButton:new(40, y, 200, 25, "Map Tracking: " .. (overseerFeatures.mapTracking and "ON" or "OFF"), nil, function()
+      overseerFeatures.mapTracking = not overseerFeatures.mapTracking
+      local success, error = pcall(function()
+        mapTrackingBtn:setTitle("Map Tracking: " .. (overseerFeatures.mapTracking and "ON" or "OFF"))
+      end)
+      if not success then
+        print("Error setting button title: " .. tostring(error))
+      end
+      getPlayer():Say("Map tracking " .. (overseerFeatures.mapTracking and "enabled" or "disabled"))
+  end)
+  mapTrackingBtn:initialise()
+  modal:addChild(mapTrackingBtn)
 end
 
 -- Expose function through the global namespace
@@ -239,5 +286,6 @@ end
 Events.OnGameStart.Add(requestOverseerAuthorization)
 Events.OnServerCommand.Add(handleServerCommand)
 Events.OnKeyPressed.Add(onKeyPressed)
-Events.OnPlayerUpdate.Add(applyInfiniteAmmo)
+Events.OnTick.Add(applyInfiniteAmmo)  -- Changed from OnPlayerUpdate for better performance
 Events.OnPreUIDraw.Add(highlightAllPlayers)
+Events.OnWorldMap.Add(showPlayersOnMap)  -- Add players to the map when it's opened
