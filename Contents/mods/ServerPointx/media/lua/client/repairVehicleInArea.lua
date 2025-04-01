@@ -75,9 +75,9 @@ local function repairVehiclesInZones()
 
     -- Hardcoded repair zones with the new zones added
     local repairAreas = {
-        {enabled = true, minX = 9384, maxX = 9388, minY = 11180, maxY = 11185}, -- Existing zone
-        {enabled = true, minX = 7242, maxX = 7251, minY = 5503, maxY = 5509}, -- Existing zone
-        {enabled = true, minX = 12715, maxX = 12724, minY = 5074, maxY = 5086}, -- Existing zone
+        {enabled = true, minX = 8131, maxX = 8140, minY = 11249, maxY = 11254}, -- MD
+        {enabled = true, minX = 7242, maxX = 7251, minY = 5503, maxY = 5509}, -- MAIN CC
+        {enabled = true, minX = 12715, maxX = 12724, minY = 5075, maxY = 5087}, -- LV
     }
 
     -- -- Add new zones from sandbox options
@@ -106,7 +106,7 @@ local function repairVehiclesInZones()
     local playerId = player:getOnlineID()
     local currentTime = getGameTime():getWorldAgeHours()
     local lastRepair = lastRepairTime[playerId] or 0
-    local cooldown = 24 * 24
+    local cooldown = 24 * 24 * 7
     local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
     if isVIP == 1 then cooldown = cooldown / 2 end
     if isVIP == 2 then cooldown = cooldown / 4 end
@@ -150,9 +150,9 @@ local function imInRepairZone()
 
   -- Hardcoded repair zones with the new zones added
   local repairAreas = {
-      {enabled = true, minX = 9384, maxX = 9388, minY = 11180, maxY = 11185}, -- Existing zone
-      {enabled = true, minX = 7242, maxX = 7251, minY = 5503, maxY = 5509}, -- Existing zone
-      {enabled = true, minX = 12715, maxX = 12724, minY = 5074, maxY = 5086}, -- Existing zone
+    {enabled = true, minX = 8131, maxX = 8140, minY = 11249, maxY = 11254}, -- MD
+    {enabled = true, minX = 7242, maxX = 7251, minY = 5503, maxY = 5509}, -- MAIN CC
+    {enabled = true, minX = 12715, maxX = 12724, minY = 5075, maxY = 5087}, -- LV
   }
 
   -- Add new zones from sandbox options
