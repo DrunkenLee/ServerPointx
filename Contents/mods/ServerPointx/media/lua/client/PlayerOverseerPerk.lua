@@ -13,7 +13,7 @@ local isOverseerAuthorized = false
 -- Overseer features toggle states
 local overseerFeatures = {
   infiniteAmmo = false,
-  seeEveryone = false
+  mapTracking = false  -- New feature to see players on map
 }
 
 -- Improved debug function
@@ -24,7 +24,7 @@ ServerPointx.Overseer.debug = function()
   -- List current Overseer features status
   print("Feature status:")
   print("- Infinite Ammo: " .. tostring(overseerFeatures.infiniteAmmo))
-  print("- See Everyone: " .. tostring(overseerFeatures.seeEveryone))
+  print("- Map Tracking: " .. tostring(overseerFeatures.mapTracking))
 
   return "Authorization status: " .. tostring(isOverseerAuthorized)
 end
@@ -119,24 +119,42 @@ local function applyInfiniteAmmo()
   end
 end
 
--- Function to highlight all players on screen
-local function highlightAllPlayers()
-  if not overseerFeatures.seeEveryone then return end
+-- Function to enable/disable map tracking using ISCheat
+local function applyMapTracking()
+    if not overseerFeatures.mapTracking then return end
 
-  -- Get all online players
-  local players = getOnlinePlayers()
-  if not players then return end
+    -- Only apply occasionally to reduce overhead
+    if (getGameTime():getWorldAgeHours() * 3600) % 30 > 1 then return end
 
-  local localPlayer = getSpecificPlayer(0)
+    -- Use the official cheat to enable player tracking on map
+    if ISCheatHandler and ISCheatHandler.toggleMapPlayers then
+        -- Enable the built-in player tracking
+        local cheat = getPlayer():getModData().cheat
+        if not cheat then
+            cheat = {}
+            getPlayer():getModData().cheat = cheat
+        end
 
-  -- Loop through all players and make them visible/highlighted
-  for i = 0, players:size() - 1 do
-      local player = players:get(i)
-      if player ~= localPlayer then
-          player:setHighlighted(true)
-          player:setAlphaAndTarget(1.0, 1.0) -- Make fully visible
-      end
-  end
+        -- Enable map players cheat if it's not already on
+        if not cheat.mapPlayers then
+            cheat.mapPlayers = true
+            ISCheatHandler.toggleMapPlayers(getPlayer():getPlayerNum())
+        end
+    end
+end
+
+-- Function to disable map tracking when feature is turned off
+local function disableMapTracking()
+    -- Only run if we need to disable it
+    if not overseerFeatures.mapTracking and getPlayer() and getPlayer():getModData().cheat then
+        local cheat = getPlayer():getModData().cheat
+
+        -- Disable map players if it's currently on
+        if cheat and cheat.mapPlayers and ISCheatHandler and ISCheatHandler.toggleMapPlayers then
+            cheat.mapPlayers = false
+            ISCheatHandler.toggleMapPlayers(getPlayer():getPlayerNum())
+        end
+    end
 end
 
 -- Create a simple UI to toggle features
@@ -167,19 +185,25 @@ local function createOverseerMenu()
   modal:addChild(infiniteAmmoBtn)
 
   y = y + 35
-  -- Create seeEveryoneBtn first
-  local seeEveryoneBtn = ISButton:new(40, y, 200, 25, "See Everyone: " .. (overseerFeatures.seeEveryone and "ON" or "OFF"), nil, function()
-      overseerFeatures.seeEveryone = not overseerFeatures.seeEveryone
+  -- Create mapTrackingBtn
+  local mapTrackingBtn = ISButton:new(40, y, 200, 25, "Map Tracking: " .. (overseerFeatures.mapTracking and "ON" or "OFF"), nil, function()
+      overseerFeatures.mapTracking = not overseerFeatures.mapTracking
+
+      -- When turning off, explicitly disable
+      if not overseerFeatures.mapTracking then
+          disableMapTracking()
+      end
+
       local success, error = pcall(function()
-        seeEveryoneBtn:setTitle("See Everyone: " .. (overseerFeatures.seeEveryone and "ON" or "OFF"))
+          mapTrackingBtn:setTitle("Map Tracking: " .. (overseerFeatures.mapTracking and "ON" or "OFF"))
       end)
       if not success then
-        print("Error setting button title: " .. tostring(error))
+          print("Error setting button title: " .. tostring(error))
       end
-      getPlayer():Say("See everyone " .. (overseerFeatures.seeEveryone and "enabled" or "disabled"))
+      getPlayer():Say("Map tracking " .. (overseerFeatures.mapTracking and "enabled" or "disabled"))
   end)
-  seeEveryoneBtn:initialise()
-  modal:addChild(seeEveryoneBtn)
+  mapTrackingBtn:initialise()
+  modal:addChild(mapTrackingBtn)
 end
 
 -- Expose function through the global namespace
@@ -239,5 +263,5 @@ end
 Events.OnGameStart.Add(requestOverseerAuthorization)
 Events.OnServerCommand.Add(handleServerCommand)
 Events.OnKeyPressed.Add(onKeyPressed)
-Events.OnPlayerUpdate.Add(applyInfiniteAmmo)
-Events.OnPreUIDraw.Add(highlightAllPlayers)
+Events.OnTick.Add(applyInfiniteAmmo)  -- Changed from OnPlayerUpdate for better performance
+Events.OnTick.Add(applyMapTracking)    -- Register map tracking
