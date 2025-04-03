@@ -13,7 +13,7 @@ local isOverseerAuthorized = false
 -- Overseer features toggle states
 local overseerFeatures = {
   infiniteAmmo = false,
-  mapTracking = false  -- New feature to see players on map
+  unlimitedEndurance = false
 }
 
 -- Improved debug function
@@ -24,7 +24,7 @@ ServerPointx.Overseer.debug = function()
   -- List current Overseer features status
   print("Feature status:")
   print("- Infinite Ammo: " .. tostring(overseerFeatures.infiniteAmmo))
-  print("- Map Tracking: " .. tostring(overseerFeatures.mapTracking))
+  print("- Unlimited Endurance: " .. tostring(overseerFeatures.unlimitedEndurance))
 
   return "Authorization status: " .. tostring(isOverseerAuthorized)
 end
@@ -119,40 +119,40 @@ local function applyInfiniteAmmo()
   end
 end
 
--- Function to enable/disable map tracking using ISCheat
-local function applyMapTracking()
-    if not overseerFeatures.mapTracking then return end
+-- Function to enable/disable unlimited endurance using ISCheat
+local function applyUnlimitedEndurance()
+    if not overseerFeatures.unlimitedEndurance then return end
 
     -- Only apply occasionally to reduce overhead
     if (getGameTime():getWorldAgeHours() * 3600) % 30 > 1 then return end
 
-    -- Use the official cheat to enable player tracking on map
-    if ISCheatHandler and ISCheatHandler.toggleMapPlayers then
-        -- Enable the built-in player tracking
+    -- Use the official cheat to enable unlimited endurance
+    if ISCheatHandler and ISCheatHandler.toggleUnlimitedEndurance then
+        -- Enable the built-in unlimited endurance
         local cheat = getPlayer():getModData().cheat
         if not cheat then
             cheat = {}
             getPlayer():getModData().cheat = cheat
         end
 
-        -- Enable map players cheat if it's not already on
-        if not cheat.mapPlayers then
-            cheat.mapPlayers = true
-            ISCheatHandler.toggleMapPlayers(getPlayer():getPlayerNum())
+        -- Enable unlimited endurance if it's not already on
+        if not cheat.unlimitedEndurance then
+            cheat.unlimitedEndurance = true
+            ISCheatHandler.toggleUnlimitedEndurance(getPlayer():getPlayerNum())
         end
     end
 end
 
--- Function to disable map tracking when feature is turned off
-local function disableMapTracking()
+-- Function to disable unlimited endurance when feature is turned off
+local function disableUnlimitedEndurance()
     -- Only run if we need to disable it
-    if not overseerFeatures.mapTracking and getPlayer() and getPlayer():getModData().cheat then
+    if not overseerFeatures.unlimitedEndurance and getPlayer() and getPlayer():getModData().cheat then
         local cheat = getPlayer():getModData().cheat
 
-        -- Disable map players if it's currently on
-        if cheat and cheat.mapPlayers and ISCheatHandler and ISCheatHandler.toggleMapPlayers then
-            cheat.mapPlayers = false
-            ISCheatHandler.toggleMapPlayers(getPlayer():getPlayerNum())
+        -- Disable unlimited endurance if it's currently on
+        if cheat and cheat.unlimitedEndurance and ISCheatHandler and ISCheatHandler.toggleUnlimitedEndurance then
+            cheat.unlimitedEndurance = false
+            ISCheatHandler.toggleUnlimitedEndurance(getPlayer():getPlayerNum())
         end
     end
 end
@@ -185,25 +185,25 @@ local function createOverseerMenu()
   modal:addChild(infiniteAmmoBtn)
 
   y = y + 35
-  -- Create mapTrackingBtn
-  local mapTrackingBtn = ISButton:new(40, y, 200, 25, "Map Tracking: " .. (overseerFeatures.mapTracking and "ON" or "OFF"), nil, function()
-      overseerFeatures.mapTracking = not overseerFeatures.mapTracking
+  -- Create unlimitedEnduranceBtn
+  local unlimitedEnduranceBtn = ISButton:new(40, y, 200, 25, "Unlimited Endurance: " .. (overseerFeatures.unlimitedEndurance and "ON" or "OFF"), nil, function()
+      overseerFeatures.unlimitedEndurance = not overseerFeatures.unlimitedEndurance
 
       -- When turning off, explicitly disable
-      if not overseerFeatures.mapTracking then
-          disableMapTracking()
+      if not overseerFeatures.unlimitedEndurance then
+          disableUnlimitedEndurance()
       end
 
       local success, error = pcall(function()
-          mapTrackingBtn:setTitle("Map Tracking: " .. (overseerFeatures.mapTracking and "ON" or "OFF"))
+          unlimitedEnduranceBtn:setTitle("Unlimited Endurance: " .. (overseerFeatures.unlimitedEndurance and "ON" or "OFF"))
       end)
       if not success then
           print("Error setting button title: " .. tostring(error))
       end
-      getPlayer():Say("Map tracking " .. (overseerFeatures.mapTracking and "enabled" or "disabled"))
+      getPlayer():Say("Unlimited endurance " .. (overseerFeatures.unlimitedEndurance and "enabled" or "disabled"))
   end)
-  mapTrackingBtn:initialise()
-  modal:addChild(mapTrackingBtn)
+  unlimitedEnduranceBtn:initialise()
+  modal:addChild(unlimitedEnduranceBtn)
 end
 
 -- Expose function through the global namespace
@@ -264,4 +264,4 @@ Events.OnGameStart.Add(requestOverseerAuthorization)
 Events.OnServerCommand.Add(handleServerCommand)
 Events.OnKeyPressed.Add(onKeyPressed)
 Events.OnTick.Add(applyInfiniteAmmo)  -- Changed from OnPlayerUpdate for better performance
-Events.OnTick.Add(applyMapTracking)    -- Register map tracking
+Events.OnTick.Add(applyUnlimitedEndurance)  -- Register unlimited endurance feature

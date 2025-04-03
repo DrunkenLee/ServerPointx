@@ -57,8 +57,6 @@ end
 
 -- Process client authorization requests
 local function onClientCommand(module, command, player, args)
-    print("SERVER RECEIVED COMMAND: " .. module .. " - " .. command .. " from " .. player:getUsername())
-
     if module == "OverseerPerk" then
         if command == "RequestAuthorization" then
             local username = player:getUsername()
