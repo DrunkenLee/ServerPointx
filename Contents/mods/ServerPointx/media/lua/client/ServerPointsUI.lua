@@ -374,23 +374,46 @@ end
 
 function ServerPointsUI.BuyType.UTIL(row)
   local player = getPlayer()
-  if row.target == "HEALTH" then
-      local bodyDamage = player:getBodyDamage()
-      local stats = player:getStats()
+if row.target == "HEALTH" then
+    local bodyDamage = player:getBodyDamage()
+    local stats = player:getStats()
 
-      bodyDamage:setFoodSicknessLevel(0)
-      bodyDamage:setInfected(false)
-      bodyDamage:setPoisonLevel(0)
-      bodyDamage:setSneezeCoughActive(0)
-      stats:setSickness(0) -- Set the player's sickness to 0
+    -- Clear general sickness
+    bodyDamage:setFoodSicknessLevel(0)
+    bodyDamage:setInfected(false)
+    bodyDamage:setPoisonLevel(0)
+    bodyDamage:setSneezeCoughActive(0)
+    bodyDamage:setInfectionLevel(0)
+    bodyDamage:setInfectionTime(-1) -- Reset infection timer
+    bodyDamage:setInfectionMortalityDuration(-1)
+    stats:setSickness(0)
 
-      for i = 0, bodyDamage:getBodyParts():size() - 1 do
-          local bodyPart = bodyDamage:getBodyParts():get(i)
-          bodyPart:RestoreToFullHealth()
-      end
-      player:Say('Ciee sembuh .. :D')
-      sendClientCommand("ServerPoints", "buy", { row.price, row.target })
-  end
+    -- Clear zombie infection and wounds for each body part individually
+    for i = 0, bodyDamage:getBodyParts():size() - 1 do
+        local bodyPart = bodyDamage:getBodyParts():get(i)
+        bodyPart:SetInfected(false)
+        bodyPart:SetInfectedWound(false)
+        bodyPart:SetFakeInfected(false)
+        bodyPart:setBiteTime(0)
+        bodyPart:setBitten(false)
+        bodyPart:setScratched(false)
+        bodyPart:setCut(false)
+        bodyPart:setDeepWounded(false)
+        bodyPart:setBleedingTime(0)
+        bodyPart:setBurnTime(0)
+        bodyPart:RestoreToFullHealth()
+    end
+
+    -- Reset any other infection-related status
+    bodyDamage:setThumpDmg(false)
+    bodyDamage:setHasACold(false)
+    bodyDamage:setHasAFever(false)
+    bodyDamage:setOverallBodyHealth(100)
+
+    -- Notify player
+    player:Say('Ciee sembuh beneran .. :D')
+    sendClientCommand("ServerPoints", "buy", { row.price, row.target })
+end
 
   if row.target == "TRAITADD" then
       local trait = row.trait
