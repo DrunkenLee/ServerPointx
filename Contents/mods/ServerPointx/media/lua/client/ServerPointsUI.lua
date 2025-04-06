@@ -395,10 +395,7 @@ function ServerPointsUI.BuyType.UTIL(row)
 
     -- Clear cold, fever, etc.
     pcall(function() bodyDamage:setHasACold(false) end)
-    pcall(function() bodyDamage:setHasAFever(false) end)
-    pcall(function() bodyDamage:setIsFakeInfected(false) end)
     pcall(function() bodyDamage:setColdStrength(0) end)
-    pcall(function() bodyDamage:setFakeInfectionLevel(0) end)
     pcall(function() bodyDamage:setSneezeCoughActive(0) end)
     pcall(function() bodyDamage:setThumpDmg(false) end)
 
