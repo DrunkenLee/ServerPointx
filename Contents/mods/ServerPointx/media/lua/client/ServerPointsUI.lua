@@ -374,46 +374,101 @@ end
 
 function ServerPointsUI.BuyType.UTIL(row)
   local player = getPlayer()
-if row.target == "HEALTH" then
+  if row.target == "HEALTH" then
+    -- Use pcall for all methods to prevent nil errors
     local bodyDamage = player:getBodyDamage()
+
+    -- Clear overall body health settings
+    pcall(function() bodyDamage:setOverallBodyHealth(100) end)
+    pcall(function() bodyDamage:setHealthFromFood(1) end)
+    pcall(function() bodyDamage:setHealthFromFoodTimer(0) end)
+    pcall(function() bodyDamage:setUnhappynessLevel(0) end)
+    pcall(function() bodyDamage:setBoredomLevel(0) end)
+
+    -- Clear diseases and infections at body level
+    pcall(function() bodyDamage:setInfectionLevel(0) end)
+    pcall(function() bodyDamage:setFoodSicknessLevel(0) end)
+    pcall(function() bodyDamage:setPoisonLevel(0) end)
+    pcall(function() bodyDamage:setInfected(false) end)
+    pcall(function() bodyDamage:setInfectionTime(-1) end)
+    pcall(function() bodyDamage:setInfectionMortalityDuration(-1) end)
+
+    -- Clear cold, fever, etc.
+    pcall(function() bodyDamage:setHasACold(false) end)
+    pcall(function() bodyDamage:setHasAFever(false) end)
+    pcall(function() bodyDamage:setIsFakeInfected(false) end)
+    pcall(function() bodyDamage:setColdStrength(0) end)
+    pcall(function() bodyDamage:setFakeInfectionLevel(0) end)
+    pcall(function() bodyDamage:setSneezeCoughActive(0) end)
+    pcall(function() bodyDamage:setThumpDmg(false) end)
+
+    -- Stats fixes
     local stats = player:getStats()
+    pcall(function() stats:setFatigue(0) end)
+    pcall(function() stats:setEndurance(1) end)
+    pcall(function() stats:setThirst(0) end)
+    pcall(function() stats:setHunger(0) end)
+    pcall(function() stats:setStress(0) end)
+    pcall(function() stats:setPanic(0) end)
+    pcall(function() stats:setSickness(0) end)
+    pcall(function() stats:setDrunkenness(0) end)
 
-    -- Clear general sickness
-    bodyDamage:setFoodSicknessLevel(0)
-    bodyDamage:setInfected(false)
-    bodyDamage:setPoisonLevel(0)
-    bodyDamage:setSneezeCoughActive(0)
-    bodyDamage:setInfectionLevel(0)
-    bodyDamage:setInfectionTime(-1) -- Reset infection timer
-    bodyDamage:setInfectionMortalityDuration(-1)
-    stats:setSickness(0)
-
-    -- Clear zombie infection and wounds for each body part individually
-    for i = 0, bodyDamage:getBodyParts():size() - 1 do
+    -- Heal all body parts using a reliable approach with pcall
+    pcall(function()
+      for i = 0, bodyDamage:getBodyParts():size() - 1 do
         local bodyPart = bodyDamage:getBodyParts():get(i)
-        bodyPart:SetInfected(false)
-        bodyPart:SetInfectedWound(false)
-        bodyPart:SetFakeInfected(false)
-        bodyPart:setBiteTime(0)
-        bodyPart:setBitten(false)
-        bodyPart:setScratched(false)
-        bodyPart:setCut(false)
-        bodyPart:setDeepWounded(false)
-        bodyPart:setBleedingTime(0)
-        bodyPart:setBurnTime(0)
-        bodyPart:RestoreToFullHealth()
-    end
 
-    -- Reset any other infection-related status
-    bodyDamage:setThumpDmg(false)
-    bodyDamage:setHasACold(false)
-    bodyDamage:setHasAFever(false)
-    bodyDamage:setOverallBodyHealth(100)
+        -- Try both lowercase and uppercase method variants
+        pcall(function() bodyPart:setScratched(false, false) end)
+        pcall(function() bodyPart:SetScratched(false, false) end)
+        pcall(function() bodyPart:setBitten(false, false) end)
+        pcall(function() bodyPart:SetBitten(false, false) end)
+        pcall(function() bodyPart:setCut(false) end)
+        pcall(function() bodyPart:SetCut(false) end)
+        pcall(function() bodyPart:setDeepWounded(false) end)
+        pcall(function() bodyPart:SetDeepWounded(false) end)
+        pcall(function() bodyPart:setBleedingTime(0) end)
+        pcall(function() bodyPart:setBurnTime(0) end)
+        pcall(function() bodyPart:setScratchTime(0) end)
+        pcall(function() bodyPart:setBiteTime(0) end)
+        pcall(function() bodyPart:setCutTime(0) end)
+        pcall(function() bodyPart:setFractureTime(0) end)
+        pcall(function() bodyPart:setHealth(1) end)
+        pcall(function() bodyPart:RestoreToFullHealth() end)
+        pcall(function() bodyPart:setInfected(false) end)
+        pcall(function() bodyPart:SetInfected(false) end)
+        pcall(function() bodyPart:setInfectedWound(false) end)
+        pcall(function() bodyPart:SetInfectedWound(false) end)
+        pcall(function() bodyPart:setWoundInfectionLevel(0) end)
+        pcall(function() bodyPart:SetFakeInfected(false) end)
+        pcall(function() bodyPart:setFakeInfected(false) end)
+
+        -- Try alternate infection methods
+        pcall(function() bodyPart:setInfection(false) end)
+        pcall(function() bodyPart:SetInfection(false) end)
+        pcall(function() bodyPart:setZombieInfected(false) end)
+      end
+    end)
+
+    -- Force update visuals safely
+    pcall(function() player:resetModel() end)
+
+    -- Set bandages to clean safely
+    pcall(function()
+      if bodyDamage:getBodyParts() then
+        for i = 0, bodyDamage:getBodyParts():size() - 1 do
+          local bodyPart = bodyDamage:getBodyParts():get(i)
+          if pcall(function() return bodyPart:getBandageLife() > 0 end) then
+            pcall(function() bodyPart:setAlcoholLevel(1) end)
+          end
+        end
+      end
+    end)
 
     -- Notify player
-    player:Say('Ciee sembuh beneran .. :D')
+    pcall(function() player:Say('Ciee sembuh beneran .. :D') end)
     sendClientCommand("ServerPoints", "buy", { row.price, row.target })
-end
+  end
 
   if row.target == "TRAITADD" then
       local trait = row.trait
