@@ -393,7 +393,6 @@ if row.target == "HEALTH" then
         local bodyPart = bodyDamage:getBodyParts():get(i)
         bodyPart:SetInfected(false)
         bodyPart:SetInfectedWound(false)
-        bodyPart:SetFakeInfected(false)
         bodyPart:setBiteTime(0)
         bodyPart:setBitten(false)
         bodyPart:setScratched(false)
