@@ -65,6 +65,7 @@ local timerEndTime = nil
 function ShowServerPointsUI(duration)
     if MainScreen and MainScreen.instance and MainScreen.instance.serverPoints then
         MainScreen.instance.serverPoints:setVisible(true)
+        MainScreen.instance.simpleUI:setVisible(true)
         print("ServerPoints UI is now visible.")
 
         duration = duration or (60 * 5)
