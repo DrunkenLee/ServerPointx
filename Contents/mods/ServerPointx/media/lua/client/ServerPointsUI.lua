@@ -52,6 +52,13 @@ function ServerPointsUI.LoadType.XP(row, entry)
     row.texture = getTexture("media/ui/Moodle_internal_plus_green.png")
 end
 
+function ServerPointsUI.LoadType.COS(row, entry)
+  row.quantity = entry.quantity or 1
+  local item = getScriptManager():getItem(entry.target)
+  row.text = item and item:getDisplayName() or tostring(entry.target)
+  row.texture = item and item:getNormalTexture() or getTexture("media/ui/icon_clothing.png")
+end
+
 function ServerPointsUI.LoadType.REDEEMKILL(row, entry)
   row.quantity = entry.quantity or 1
   row.text = entry.target .. " -> DISABLED DUE TO GLITCH"
@@ -510,6 +517,19 @@ function ServerPointsUI.BuyType.UTIL(row)
   end
 end
 
+function ServerPointsUI.BuyType.COS(row)
+  local player = getPlayer()
+  local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
+
+  local price = row.price
+  if isVIP == 1 then price = price * 0.9 end
+  if isVIP == 2 then price = price * 0.8 end
+  if isVIP == 3 then price = price * 0.7 end
+
+  sendClientCommand("ServerPoints", "buy", { price, row.target })
+  player:getInventory():AddItems(row.target, row.quantity)
+end
+
 function ServerPointsUI.printPlayerTraits(player)
   if not player then
       print("Player not found.")
@@ -533,6 +553,19 @@ function ServerPointsUI.BuyType.REDEEMKILL(row)
   -- Check if the kill count is reasonable
   player:Say("This feature is disabled by admin due to glitch, credit: ERA for finding the glitch")
 
+end
+
+function ServerPointsUI.BuyType.COS(row)
+  local player = getPlayer()
+  local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
+
+  local price = row.price
+  if isVIP == 1 then price = price * 0.9 end
+  if isVIP == 2 then price = price * 0.8 end
+  if isVIP == 3 then price = price * 0.7 end
+
+  sendClientCommand("ServerPoints", "buy", { price, row.target })
+  player:getInventory():AddItems(row.target, row.quantity)
 end
 
 function ServerPointsUI.BuyType.BUFF(row)
@@ -564,6 +597,11 @@ function ServerPointsUI.BuyType.BUFF(row)
   end
 end
 
+function ServerPointsUI.BuyType.PNG(row)
+  local player = getPlayer()
+  player:Say("This item can be purchased at NPC Item Mall.")
+end
+
 function ServerPointsUI:onBuy()
   local row = self.tabPanel.activeView.view.items[self.tabPanel.activeView.view.mouseoverselected]
   local player = getPlayer()
@@ -588,6 +626,83 @@ function ServerPointsUI:onBuy()
   end
   Events.OnServerCommand.Add(OnServerCommand)
   sendClientCommand("ServerPoints", "get", nil)
+end
+
+function ServerPointsUI.PreviewType.COS(self)
+  -- Show a 3D preview of the COS gear (clothing)
+  self.preview = ISUI3DScene:new(self.x + self.width, self.y, 400 * FONT_SCALE, self.height)
+  self.preview:initialise()
+  self.parent:addChild(self.preview)
+  self.preview.onMouseMove = function(self, dx, dy)
+      if self.mouseDown then
+          local vector = self:getRotation()
+          local x = vector:x() + dy
+          x = x > 90 and 90 or x < -90 and -90 or x
+          self:setRotation(x, vector:y() + dx)
+      end
+  end
+  self.preview.setRotation = function(self, x, y)
+      self.javaObject:fromLua3("setViewRotation", x, y, 0)
+  end
+  self.preview.getRotation = function(self)
+      return self.javaObject:fromLua0("getViewRotation")
+  end
+  self.preview.javaObject:fromLua1("setDrawGrid", false)
+  self.preview.javaObject:fromLua1("createClothing", self.tabPanel.activeView.view.items[self.tabPanel.activeView.view.mouseoverselected].target)
+  self.preview.javaObject:fromLua3("setViewRotation", 45 / 2, 45, 0)
+  self.preview.javaObject:fromLua1("setView", "UserDefined")
+  self.preview.javaObject:fromLua2("dragView", 0, 30)
+  self.preview.javaObject:fromLua1("setZoom", 6)
+
+  self.preview.closeButton = ISButton:new(self.preview.width - 15 * FONT_SCALE, 5 * FONT_SCALE, 10 * FONT_SCALE, 10 * FONT_SCALE, nil, self.preview, function(self)
+      self:setVisible(false)
+      self:removeFromUIManager()
+      ServerPointsUI.instance.preview = nil
+  end)
+  self.preview.closeButton:setDisplayBackground(false)
+  self.preview.closeButton:setImage(getTexture("media/ui/Dialog_Titlebar_CloseIcon.png"))
+  self.preview.closeButton:forceImageSize(self.preview.closeButton.width, self.preview.closeButton.height)
+  self.preview.closeButton:initialise()
+  self.preview:addChild(self.preview.closeButton)
+end
+
+function ServerPointsUI.PreviewType.PNG(self)
+  -- Remove existing preview if any
+  if self.preview then
+      self.preview:setVisible(false)
+      self.preview:removeFromUIManager()
+      ServerPointsUI.instance.preview = nil
+  end
+
+  -- Get the selected row/item
+  local row = self.tabPanel.activeView.view.items[self.tabPanel.activeView.view.mouseoverselected]
+  local pngPath = row and row.png or "media/ui/your_image.png"
+
+  -- Create a new panel for the PNG preview
+  local previewPanel = ISPanel:new(self.x + self.width, self.y, 200 * FONT_SCALE, 200 * FONT_SCALE)
+  previewPanel.backgroundColor = {r=0, g=0, b=0, a=0.8}
+  previewPanel:initialise()
+  previewPanel.render = function(panel)
+      local tex = getTexture(pngPath)
+      if tex then
+          panel:drawTextureScaledAspect2(tex, 0, 0, panel.width, panel.height, 1, 1, 1, 1)
+      end
+  end
+
+  -- Add a close button
+  previewPanel.closeButton = ISButton:new(previewPanel.width - 15 * FONT_SCALE, 5 * FONT_SCALE, 10 * FONT_SCALE, 10 * FONT_SCALE, nil, previewPanel, function(self)
+      self:setVisible(false)
+      self:removeFromUIManager()
+      ServerPointsUI.instance.preview = nil
+  end)
+  previewPanel.closeButton:setDisplayBackground(false)
+  previewPanel.closeButton:setImage(getTexture("media/ui/Dialog_Titlebar_CloseIcon.png"))
+  previewPanel.closeButton:forceImageSize(previewPanel.closeButton.width, previewPanel.closeButton.height)
+  previewPanel.closeButton:initialise()
+  previewPanel:addChild(previewPanel.closeButton)
+
+  self.parent:addChild(previewPanel)
+  ServerPointsUI.instance.preview = previewPanel
 end
 
 function ServerPointsUI.PreviewType.VEHICLE(self)
@@ -709,6 +824,12 @@ function ServerPointsUI:addView(name, view)
             self.maxLength = viewObject.tabWidth
         end
     end
+end
+
+function ServerPointsUI.LoadType.PNG(row, entry)
+  row.text = entry.text or entry.target
+  row.texture = getTexture(entry.png or "media/ui/your_image.png") -- fallback if not set
+  row.png = entry.png -- store the PNG path for preview
 end
 
 function ServerPointsUI.DrawType.DIV(self, y, item, alt)
