@@ -56,6 +56,7 @@ function ServerPointsUI.LoadType.COS(row, entry)
   row.quantity = entry.quantity or 1
   local item = getScriptManager():getItem(entry.target)
   row.text = item and item:getDisplayName() or tostring(entry.target)
+  row.text = row.text .. " --- Using Raid Points ---"
   row.texture = item and item:getNormalTexture() or getTexture("media/ui/icon_clothing.png")
 end
 
@@ -208,20 +209,29 @@ function ServerPointsUI.BuyType.ITEM(row)
   local price = row.price
 
   if isVIP == 1 then
-      price = price * 0.9 -- Apply 10% discount
+      price = price * 0.9
   end
 
   if isVIP == 2 then
-    price = price * 0.8 -- Apply 20% discount
+      price = price * 0.8
   end
 
-
   if isVIP == 3 then
-    price = price * 0.7 -- Apply 30% discount
+      price = price * 0.7
   end
 
   sendClientCommand("ServerPoints", "buy", { price, row.target })
-  player:getInventory():AddItems(row.target, row.quantity)
+  local items = player:getInventory():AddItems(row.target, row.quantity)
+  if items then
+    for i = 0, items:size()-1 do
+      local item = items:get(i)
+      if item then
+        local modData = item:getModData()
+        modData.source = 'SERVERPOINTS'
+      end
+    end
+  end
+
 end
 
 function ServerPointsUI.BuyType.VEHICLE(row)
@@ -599,7 +609,30 @@ end
 
 function ServerPointsUI.BuyType.PNG(row)
   local player = getPlayer()
-  player:Say("This item can be purchased at NPC Item Mall.")
+  local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
+  local price = row.price
+  local checkRaidPoint = buyItemSkin(price) or false
+  print(checkRaidPoint)
+  if not checkRaidPoint then
+     player:Say("Not enough raid points")
+     return
+  end
+
+  local items = player:getInventory():AddItems(row.target, 1)
+  ZMEquipmentHandler.setRestrictedGearAllow(player:getUsername(), row.target, true)
+
+  if items and items:size() > 0 then
+    for i=0, items:size()-1 do
+      local item = items:get(i)
+      if item then
+        local modData = item:getModData()
+        modData.Source = "SERVERPOINTS"
+      end
+    end
+    player:Say("You received: " .. tostring(row.target))
+  else
+    player:Say("Failed to add item: " .. tostring(row.target))
+  end
 end
 
 function ServerPointsUI:onBuy()
