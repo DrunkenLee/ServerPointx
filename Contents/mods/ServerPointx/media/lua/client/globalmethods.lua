@@ -7,7 +7,6 @@ local function OnServerCommand(module, command, arguments)
   if module == "ServerPoints" and command == "get" then
       ServerPointsUI.instance.points = arguments[1]
       return ServerPointsUI.instance.points
-      -- print("Received points: " .. tostring(arguments[1])) -- Print the received points
   end
 end
 
