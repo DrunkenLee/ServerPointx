@@ -39,6 +39,17 @@ function GlobalMethods.depositPoints(username, amount)
     return true
 end
 
+function GlobalMethods.depositRaidPoints(username, amount)
+    if not username or not amount or amount <= 0 then
+        print("Invalid raid deposit request")
+        return false
+    end
+
+    sendClientCommand("ServerRaidPoints", "deposit", { username, amount })
+    print("Raid deposit request sent: " .. amount .. " raid points for " .. username)
+    return true
+end
+
 -- Handle deposit response from server
 local function onServerDepositResponse(module, command, arguments)
     if module == "ServerPoints" and command == "depositResult" then
@@ -51,7 +62,20 @@ local function onServerDepositResponse(module, command, arguments)
     end
 end
 
+local function onServerRaidDepositResponse(module, command, arguments)
+    if module == "ServerRaidPoints" and command == "depositResult" then
+        local player = getPlayer()
+        if arguments.success then
+            player:Say("Successfully deposited " .. arguments.amount .. " raid points")
+        else
+            player:Say("Raid deposit failed: " .. (arguments.message or "Unknown error"))
+        end
+    end
+end
+
 -- Register the response handler
 Events.OnServerCommand.Add(onServerDepositResponse)
+Events.OnServerCommand.Add(onServerRaidDepositResponse)
+
 
 return GlobalMethods
