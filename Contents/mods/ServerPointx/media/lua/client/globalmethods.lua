@@ -28,4 +28,30 @@ function GlobalMethods.getPlayerPoints(username)
     return ServerPointsUI.instance.points or 0
 end
 
+function GlobalMethods.depositPoints(username, amount)
+    if not username or not amount or amount <= 0 then
+        print("Invalid deposit request")
+        return false
+    end
+
+    sendClientCommand("ServerPoints", "deposit", { username, amount })
+    print("Deposit request sent: " .. amount .. " points for " .. username)
+    return true
+end
+
+-- Handle deposit response from server
+local function onServerDepositResponse(module, command, arguments)
+    if module == "ServerPoints" and command == "depositResult" then
+        local player = getPlayer()
+        if arguments.success then
+            player:Say("Successfully deposited " .. arguments.amount .. " points")
+        else
+            player:Say("Deposit failed: " .. (arguments.message or "Unknown error"))
+        end
+    end
+end
+
+-- Register the response handler
+Events.OnServerCommand.Add(onServerDepositResponse)
+
 return GlobalMethods
