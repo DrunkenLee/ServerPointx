@@ -2,7 +2,6 @@ require "ServerPointsShared"
 
 local ServerDepositPoints = {}
 
--- Get proper save directory path
 local function getDepositDirectory()
     local saveDir = "Deposits"
     if isServer() then
@@ -13,7 +12,6 @@ local function getDepositDirectory()
     return saveDir
 end
 
--- Write deposit to player's ini file
 local function writeDepositToFile(username, amount)
     local filePath = getDepositDirectory() .. "/" .. username .. "_deposits.ini"
 
@@ -34,7 +32,6 @@ local function writeDepositToFile(username, amount)
     return false
 end
 
--- Handle deposit request from client
 local function onClientDepositRequest(module, command, player, args)
     if module ~= "ServerPoints" or command ~= "deposit" then return end
     print("DEBUG: onClientDepositRequest called")
@@ -72,7 +69,6 @@ local function onClientDepositRequest(module, command, player, args)
     sendServerCommand(player, "ServerPoints", "depositResult", result)
 end
 
--- Register the event handler
 Events.OnClientCommand.Add(onClientDepositRequest)
 
 return ServerDepositPoints
