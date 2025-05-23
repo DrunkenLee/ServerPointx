@@ -77,5 +77,70 @@ end
 Events.OnServerCommand.Add(onServerDepositResponse)
 Events.OnServerCommand.Add(onServerRaidDepositResponse)
 
+function GlobalMethods.withdrawPoints(username)
+    if not username then
+        print("Invalid withdrawal request")
+        return false
+    end
+
+    sendClientCommand("ServerPoints", "withdraw", { username })
+    print("Withdrawal request sent for " .. username)
+    return true
+end
+
+function GlobalMethods.withdrawRaidPoints(username)
+    if not username then
+        print("Invalid raid withdrawal request")
+        return false
+    end
+
+    sendClientCommand("ServerRaidPoints", "withdraw", { username })
+    print("Raid withdrawal request sent for " .. username)
+    return true
+end
+
+local function onServerWithdrawResponse(module, command, arguments)
+    if module == "ServerPoints" and command == "withdrawResult" then
+        local player = getPlayer()
+        if arguments.success then
+            player:Say("Successfully withdrew " .. arguments.amount .. " points")
+        else
+            player:Say("Withdrawal failed: " .. (arguments.message or "Unknown error"))
+        end
+    end
+end
+
+local function onServerRaidWithdrawResponse(module, command, arguments)
+    if module == "ServerRaidPoints" and command == "withdrawResult" then
+        local player = getPlayer()
+        if arguments.success then
+            player:Say("Successfully withdrew " .. arguments.amount .. " raid points")
+        else
+            player:Say("Raid withdrawal failed: " .. (arguments.message or "Unknown error"))
+        end
+    end
+end
+
+local function onServerAddPoints(module, command, arguments)
+    if module == "ServerPoints" and command == "addPoints" then
+        local amount = arguments[1]
+        if amount then
+            -- Add points to player's balance (this should trigger your existing points system)
+            print("Adding " .. amount .. " points from withdrawal")
+            GlobalMethods.addPlayerPoints(getPlayer():getUsername(), amount)
+        end
+    elseif module == "ServerRaidPoints" and command == "addPoints" then
+        local amount = arguments[1]
+        if amount then
+            -- Add raid points to player's balance
+            print("Adding " .. amount .. " raid points from withdrawal")
+            -- Do nothing since other mod will handle it
+        end
+    end
+end
+
+Events.OnServerCommand.Add(onServerWithdrawResponse)
+Events.OnServerCommand.Add(onServerRaidWithdrawResponse)
+Events.OnServerCommand.Add(onServerAddPoints)
 
 return GlobalMethods

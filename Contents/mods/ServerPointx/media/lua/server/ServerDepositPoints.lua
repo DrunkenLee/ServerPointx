@@ -32,6 +32,31 @@ local function writeDepositToFile(username, amount)
     return false
 end
 
+local function readDepositsFromFile(username)
+    local filePath = getDepositDirectory() .. "/" .. username .. "_deposits.ini"
+
+    -- Check if file exists
+    local file = getFileReader(filePath, false)
+    if not file then
+        print("INFO: No deposits file found for " .. username)
+        return 0
+    end
+
+    -- Read the file to get total deposit amount
+    local totalAmount = 0
+    local line = file:readLine()
+    while line ~= nil do
+        if line:find("Amount=") then
+            local amount = tonumber(line:match("Amount=(.*)"))
+            if amount then totalAmount = totalAmount + amount end
+        end
+        line = file:readLine()
+    end
+    file:close()
+
+    return totalAmount
+end
+
 local function onClientDepositRequest(module, command, player, args)
     if module ~= "ServerPoints" or command ~= "deposit" then return end
     print("DEBUG: onClientDepositRequest called")
@@ -69,6 +94,85 @@ local function onClientDepositRequest(module, command, player, args)
     sendServerCommand(player, "ServerPoints", "depositResult", result)
 end
 
+
+local function moveFileContent(oldPath, newPath)
+    local oldFile = getFileReader(oldPath, false)
+    if not oldFile then return false end
+
+    local newFile = getFileWriter(newPath, true, false)
+    if not newFile then
+        oldFile:close()
+        return false
+    end
+
+    local line = oldFile:readLine()
+    while line ~= nil do
+        newFile:write(line .. "\n")
+        line = oldFile:readLine()
+    end
+
+    oldFile:close()
+    newFile:close()
+
+    local eraseFile = getFileWriter(oldPath, false, false)
+    if eraseFile then
+        eraseFile:write("")
+        eraseFile:close()
+    end
+    return true
+end
+
+local function onClientWithdrawRequest(module, command, player, args)
+    if module ~= "ServerPoints" or command ~= "withdraw" then return end
+    print("DEBUG: onClientWithdrawRequest called")
+
+    local username = args[1]
+    local result = { success = false }
+
+    -- Validate request
+    if not username then
+        result.message = "Invalid withdrawal request"
+        sendServerCommand(player, "ServerPoints", "withdrawResult", result)
+        return
+    end
+
+    -- Check if this is the right player making the request
+    if username ~= player:getUsername() then
+        result.message = "You can only withdraw your own points"
+        sendServerCommand(player, "ServerPoints", "withdrawResult", result)
+        return
+    end
+
+    -- Get total deposits
+    local totalDeposits = readDepositsFromFile(username)
+
+    if totalDeposits <= 0 then
+        result.message = "No deposits found to withdraw"
+        sendServerCommand(player, "ServerPoints", "withdrawResult", result)
+        return
+    end
+
+    -- Get file paths
+    local filePath = getDepositDirectory() .. "/" .. username .. "_deposits.ini"
+    local newFilePath = getDepositDirectory() .. "/" .. username .. "_deposits_withdrawed.ini"
+
+    -- Move file content and create the withdrawed file
+    if moveFileContent(filePath, newFilePath) then
+        -- Success
+        result.success = true
+        result.amount = totalDeposits
+
+        -- Tell client to add the points
+        sendServerCommand(player, "ServerPoints", "addPoints", { totalDeposits })
+    else
+        result.message = "Failed to process withdrawal"
+    end
+
+    sendServerCommand(player, "ServerPoints", "withdrawResult", result)
+end
+
 Events.OnClientCommand.Add(onClientDepositRequest)
+
+Events.OnClientCommand.Add(onClientWithdrawRequest)
 
 return ServerDepositPoints
