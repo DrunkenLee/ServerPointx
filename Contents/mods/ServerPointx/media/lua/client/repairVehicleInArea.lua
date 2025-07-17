@@ -1,10 +1,10 @@
-require "TimedActions/ISBaseTimedAction"
-require "TimedActions/ISTimedActionQueue"
+-- require "TimedActions/ISBaseTimedAction"
+-- require "TimedActions/ISTimedActionQueue"
 
 RepairVehicleAction = ISBaseTimedAction:derive("RepairVehicleAction")
 
 -- Table to store the last repair time for each player
-local lastRepairTime = {}
+lastRepairTime = {}
 -- Table to store the last message time for each player
 local lastMessageTime = {}
 
@@ -58,9 +58,6 @@ function RepairVehicleAction:new(player, vehicle, time)
     return o
 end
 
--- Table to store the last repair time for each player
-local lastRepairTime = {}
-
 local function repairVehiclesInZones()
     local cell = getCell()
     if not cell then return end -- Ensure cell is available
@@ -75,9 +72,9 @@ local function repairVehiclesInZones()
 
     -- Hardcoded repair zones with the new zones added
     local repairAreas = {
-        {enabled = true, minX = 8131, maxX = 8140, minY = 11249, maxY = 11254}, -- MD
-        {enabled = true, minX = 7242, maxX = 7251, minY = 5503, maxY = 5509}, -- MAIN CC
-        {enabled = true, minX = 12715, maxX = 12724, minY = 5075, maxY = 5087}, -- LV
+        {enabled = true, minX = 11344, maxX = 11352, minY = 8216, maxY = 8221}, -- MD
+        {enabled = false, minX = 14741, maxX = 14750, minY = 3361, maxY = 3370}, -- LV
+        {enabled = false, minX = 7242, maxX = 7251, minY = 5503, maxY = 5509}, -- MAIN CC
     }
 
     -- -- Add new zones from sandbox options
@@ -96,17 +93,20 @@ local function repairVehiclesInZones()
     end
 
     if not playerInRepairZone then return end
+    local currentTime = getGameTime():getWorldAgeHours()
+
+    local playerId = player:getOnlineID()
+    local lastRepair = lastRepairTime[playerId] or 0
+    local cooldown = 24 * 24 * 7
+    -- local cooldown = 0.5
 
     local playerTierValue = tonumber(PlayerTierHandler.getPlayerTierValue(player)) or 1
     if playerTierValue < 3 then
         player:Say("I need to upgrade my tier to repair vehicles.")
+        lastRepairTime[playerId] = 0
         return
     end
 
-    local playerId = player:getOnlineID()
-    local currentTime = getGameTime():getWorldAgeHours()
-    local lastRepair = lastRepairTime[playerId] or 0
-    local cooldown = 24 * 24 * 7
     local isVIP = tonumber(PlayerTitleHandler.getPlayerTitle(player)) or 0
     if isVIP == 1 then cooldown = cooldown / 2 end
     if isVIP == 2 then cooldown = cooldown / 4 end
@@ -119,19 +119,33 @@ local function repairVehiclesInZones()
       if currentTime - lastMessage >= messageCooldown then
           local remainingTime = cooldown - (currentTime - lastRepair)
 
-          -- Convert in-game hours to real-time hours and minutes
           local realTimeHours = math.floor(remainingTime / 24) -- 24 in-game hours = 1 real-time hour
           local realTimeMinutes = math.floor((remainingTime % 24) * (60 / 24)) -- Convert remaining in-game hours to real-time minutes
 
-          player:Say("!" .. realTimeHours .. " hours and " .. realTimeMinutes .. " minutes remaining until I can repair again.")
+          player:Say("!  " .. realTimeHours .. " hours and " .. realTimeMinutes .. " minutes remaining until I can repair again.")
           lastMessageTime[playerId] = currentTime
       end
+
       return
     end
 
     -- Update the last repair time
     lastRepairTime[playerId] = currentTime
-    sendClientCommand("ServerPoints", "repairVehicle", { vehicle:getId() })
+    sendClientCommand("ServerPoints", "repairVehicle", { vehicleId = vehicle:getId(), playerId = player:getOnlineID() })
+end
+
+
+setLastRepairTime = function(playerId, bypass)
+  local currentTime = getGameTime():getWorldAgeHours()
+
+  if bypass then
+    -- Set the last repair time to allow immediate repairs
+    -- By setting it far enough in the past to bypass the cooldown check
+    lastRepairTime[playerId] = currentTime - (24 * 24 * 7) - 1
+  else
+    -- Normal update of repair time
+    lastRepairTime[playerId] = currentTime
+  end
 end
 
 local function parseCoordinates(coordString)
@@ -150,9 +164,9 @@ local function imInRepairZone()
 
   -- Hardcoded repair zones with the new zones added
   local repairAreas = {
-    {enabled = true, minX = 8131, maxX = 8140, minY = 11249, maxY = 11254}, -- MD
-    {enabled = true, minX = 7242, maxX = 7251, minY = 5503, maxY = 5509}, -- MAIN CC
-    {enabled = true, minX = 12715, maxX = 12724, minY = 5075, maxY = 5087}, -- LV
+      {enabled = true, minX = 11344, maxX = 11352, minY = 8216, maxY = 8221}, -- MD
+      {enabled = false, minX = 14741, maxX = 14750, minY = 3361, maxY = 3370}, -- LV
+      {enabled = false, minX = 7242, maxX = 7251, minY = 5503, maxY = 5509}, -- MAIN CC
   }
 
   -- Add new zones from sandbox options
@@ -174,13 +188,11 @@ end
 -- Add a handler for the server command to repair the vehicle
 local function onServerCommand(module, command, args)
     if module == "ServerPoints" and command == "repairVehicle" then
-        local vehicle = getVehicleById(args[1])
-        if vehicle then
-            local player = getPlayer()
-            if player then
-                -- Queue the timed action for repairing the vehicle
-                ISTimedActionQueue.add(RepairVehicleAction:new(player, vehicle, 300)) -- 300 ticks = 3 seconds
-            end
+        local vehicle = getVehicleById(args.vehicleId)
+        local player = getPlayer()
+        if vehicle and player and player:getOnlineID() == args.playerId then
+            -- Only show the repair action for the player who initiated the repair
+            ISTimedActionQueue.add(RepairVehicleAction:new(player, vehicle, 300)) -- 300 ticks = 3 seconds
         end
     end
 end

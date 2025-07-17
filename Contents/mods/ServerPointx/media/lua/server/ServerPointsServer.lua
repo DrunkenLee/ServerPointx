@@ -1,4 +1,3 @@
-
 function Recipe.OnCreate.RedeemPoints(items, result, player)
   local points = items:get(0):getModData().serverPoints or 0
   sendClientCommand("ServerPoints", "add", { player:getUsername(), points })
@@ -81,7 +80,7 @@ function ServerPointsCommands.removeTrait(module, command, player, args)
 end
 
 function ServerPointsCommands.repairVehicle(module, command, player, args)
-  local vehicle = getVehicleById(args[1])
+  local vehicle = getVehicleById(args.vehicleId)
   if vehicle then
       -- Repair all vehicle parts instantly
       for partIndex = 0, vehicle:getPartCount() - 1 do
@@ -90,9 +89,12 @@ function ServerPointsCommands.repairVehicle(module, command, player, args)
               part:setCondition(100)
           end
       end
-      -- Broadcast the repair to all clients
-      sendServerCommand("ServerPoints", "repairVehicle", { args[1] })
-      print("[Server Points] -- Vehicle repaired at ID: " .. args[1])
+      -- Broadcast the repair to all clients, including the player ID
+      sendServerCommand("ServerPoints", "repairVehicle", {
+          vehicleId = args.vehicleId,
+          playerId = args.playerId
+      })
+      print("[Server Points] -- Vehicle repaired at ID: " .. args.vehicleId)
   end
 end
 

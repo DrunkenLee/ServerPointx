@@ -14,6 +14,14 @@ local function OnServerCommand(module, command, arguments)
 end
 
 function ServerPointsAdminPanel:createChildren()
+    local player = getPlayer()
+    if not player then return end
+
+    local username = player:getUsername()
+    if username ~= "admin" and username ~= "Halfdan" then
+        return
+    end
+
     local btnWid = 125 * FONT_SCALE
     local btnHgt = FONT_HGT_SMALL + 5 * 2 * FONT_SCALE
     local padBottom = 10 * FONT_SCALE
@@ -73,6 +81,14 @@ function ServerPointsAdminPanel:createChildren()
 end
 
 function ServerPointsAdminPanel:render()
+    local player = getPlayer()
+    if not player then return end
+
+    local username = player:getUsername()
+    if username ~= "admin" and username ~= "Halfdan" then
+        return
+    end
+
     self:drawTextCentre("Server Points Panel", self.width / 2, 10 * FONT_SCALE, 1, 1, 1, 1, UIFont.Medium)
     self:drawText("Player:", 10 * FONT_SCALE, self.playerSelect.y + (self.playerSelect.height - FONT_HGT_MEDIUM) / 2, 1, 1, 1, 1, UIFont.Medium)
     self:drawText(self.balance, 10 * FONT_SCALE, self.playerSelect.y + self.playerSelect.height + 10 * FONT_SCALE, 1, 1, 1, 1, UIFont.Medium)

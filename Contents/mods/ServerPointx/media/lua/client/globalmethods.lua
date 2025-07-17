@@ -133,8 +133,15 @@ local function onServerAddPoints(module, command, arguments)
         local amount = arguments[1]
         if amount then
             -- Add raid points to player's balance
+
             print("Adding " .. amount .. " raid points from withdrawal")
-            -- Do nothing since other mod will handle it
+            local index = CharacterManager.instance:indexOf("shop01")
+            if index then
+                CharacterManager.instance.items[index]:increaseStat("skinPoint", amount)
+            else
+                print("Karakter shop01 tidak ditemukan!")
+            end
+
         end
     end
 end

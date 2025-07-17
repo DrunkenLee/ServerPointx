@@ -37,13 +37,24 @@ end
 function ServerPointsUI.LoadType.ITEM(row, entry)
     row.quantity = entry.quantity or 1
     local item = getScriptManager():getItem(entry.target)
-    row.text = item:getDisplayName()
-    row.texture = item:getNormalTexture()
+    if item then
+        row.text = item:getDisplayName()
+        row.texture = item:getNormalTexture()
+    else
+        row.text = tostring(entry.target) .. " (Item not found)"
+        row.texture = getTexture("media/ui/icon_clothing.png")
+    end
 end
 
 function ServerPointsUI.LoadType.VEHICLE(row, entry)
-    row.text = getScriptManager():getVehicle(entry.target):getName()
-    row.texture = getTexture("Item_CarKey")
+    local vehicle = getScriptManager():getVehicle(entry.target)
+    if vehicle then
+        row.text = vehicle:getName()
+        row.texture = getTexture("Item_CarKey")
+    else
+        row.text = tostring(entry.target) .. " (Vehicle not found)"
+        row.texture = getTexture("Item_CarKey")
+    end
 end
 
 function ServerPointsUI.LoadType.XP(row, entry)
