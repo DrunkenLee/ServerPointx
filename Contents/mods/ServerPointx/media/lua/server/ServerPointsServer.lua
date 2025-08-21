@@ -218,6 +218,8 @@ function OnClientCommand(module, command, player, args)
   end
 end
 
+-- Events.EveryDays.Add(PointsTick)
+
 Events.OnClientCommand.Add(OnClientCommand)
 
 return ServerPointsCommands
